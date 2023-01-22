@@ -1,0 +1,55 @@
+#!/bin/sh
+
+exec="$(basename $0)"
+ver="3"
+
+input_file="default-input-filename"
+output_file="default-output-filename"
+
+# Parse command line arguments.
+unset optarg
+unset endopts
+for i do
+	shift
+	if [ "$i" = "--" ]; then endopts=$i; continue; fi
+	if [ -z "$endopts" ] && [ "$optarg" ]; then eval "$optarg=\"$i\""; unset optarg; continue; fi
+	if [ -z "$endopts" ] && [ "${i#-}" != "$i" ]; then 
+		if [ "${i#--}" = "$i" ]; then
+		# Get short options
+		if echo "$i" | grep -q "?"; then help="$i"    ; fi
+		if echo "$i" | grep -q "V"; then version="$i" ; fi
+		if echo "$i" | grep -q "v"; then verbose="$i" ; fi
+		if echo "$i" | grep -q "d"; then debug="$i"   ; fi
+		if echo "$i" | grep -q "q"; then quiet="$i"   ; fi
+		else
+		# Get long options
+		if [ "$i" = "--help"     ]; then help="$i"    ; fi
+		if [ "$i" = "--version"  ]; then version="$i" ; fi
+		if [ "$i" = "--verbose"  ]; then verbose="$i" ; fi
+		if [ "$i" = "--debug"    ]; then debug="$i"   ; fi
+		if [ "$i" = "--quiet"    ]; then quiet="$i"   ; fi
+		fi
+		# Get options with arguments (allow equal sign)
+		if echo "$i" | grep -q "="; then v=$(echo $i | cut -d= -f2); i=$(echo $i | cut -d= -f1); fi
+		if [ "$i" = "-i" -o "$i" = "--input-file"  ]; then optarg="input_file"  ; fi
+		if [ "$i" = "-o" -o "$i" = "--output-file" ]; then optarg="output_file" ; fi
+		if [ -n "${v+x}" ]; then if [ -n "$optarg" ]; then eval "$optarg=\"$v\""; unset optarg; fi; unset v; fi
+	else
+		# Get non-option arguments.
+		set -- "$@" "$i"
+	fi
+done
+
+echo "help=$help"
+echo "version=$version"
+echo "verbose=$verbose"
+echo "debug=$debug"
+echo "quiet=$quiet"
+echo "example=$example"
+echo "input-file=$input_file"
+echo "output-file=$output_file"
+echo "args:"
+for i do
+	echo "$i"
+done
+

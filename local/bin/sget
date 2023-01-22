@@ -1,0 +1,2 @@
+#!/bin/sh
+scp "bamm@optiplex.local:/home/bamm/Desktop/$1" .

@@ -1,0 +1,7 @@
+#!/bin/bash
+for i in $(pgrep -f libflashplayer.so); do
+ls -l /proc/$i/fd/* |
+grep -i "/tmp/Flash" |
+grep -o "/proc/$i/fd/\\S*" |
+xargs cp -t ~/Desktop
+echo Done.

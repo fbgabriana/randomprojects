@@ -1,0 +1,3 @@
+#!/bin/sh
+gzip -q * && gunzip * && gzip -9 * && gunzip copyright.gz
+

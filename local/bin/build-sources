@@ -1,0 +1,34 @@
+#!/bin/sh
+
+rm -rf packages
+rm -rf */binary
+rm -rf */source
+rm -f  */*.orig.tar.gz
+rm -f  */*.debian.tar.gz
+rm -f  */*.debian.tar.xz
+rm -f  */*.diff.tar.gz
+rm -f  */*.dsc
+rm -f  */*.changes
+for d in *;
+do
+if [ -d $d ]; then
+cd $d
+if [ -f build-src ]; then
+echo Starting to build $d
+./build-src
+echo Finished building $d
+fi
+cd ..
+fi
+done
+echo Copying packages...
+mkdir -p binary
+mkdir -p source
+cp */binary/* binary
+cp */source/* source
+rm -rf */binary
+rm -rf */source
+mkdir -p apt
+mv binary apt
+mv source apt
+echo All done.

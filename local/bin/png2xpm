@@ -1,0 +1,7 @@
+#!/bin/sh
+for pic in *.png
+do
+        echo "converting $pic"
+        convert $pic $(basename $pic .png).xpm
+done
+echo "Done"

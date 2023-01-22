@@ -1,0 +1,129 @@
+#!/bin/sh
+
+for px in 16 22 24 32 48 64 96 128 192 256 384 512
+do
+	if [ -f "$1_${px}x${px}-32.png" ]; then
+		echo "Copying $1_${px}x${px}-32.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/apps
+		cp $1_${px}x${px}-32.png icons/hicolor/${px}x${px}/apps/$1.png
+	elif [ -f "$1_${px}x${px}-24.png" ]; then
+		echo "Copying $1_${px}x${px}-24.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/apps
+		cp $1_${px}x${px}-24.png icons/hicolor/${px}x${px}/apps/$1.png
+	elif [ -f "$1_${px}x${px}-16.png" ]; then
+		echo "Copying $1_${px}x${px}-16.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/apps
+		cp $1_${px}x${px}-16.png icons/hicolor/${px}x${px}/apps/$1.png
+	elif [ -f "$1_${px}x${px}-8.png" ]; then
+		echo "Copying $1_${px}x${px}-8.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/apps
+		cp $1_${px}x${px}-8.png icons/hicolor/${px}x${px}/apps/$1.png
+	elif [ -f "$1_${px}x${px}-4.png" ]; then
+		echo "Copying $1_${px}x${px}-4.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/apps
+		cp $1_${px}x${px}-4.png icons/hicolor/${px}x${px}/apps/$1.png
+	elif [ -f "$1-${px}.png" ]; then
+		echo "Copying $1-${px}.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/apps
+		cp $1-${px}.png icons/hicolor/${px}x${px}/apps/$1.png
+	elif [ -f "$1${px}.png" ]; then
+		echo "Copying $1${px}.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/apps
+		cp $1${px}.png icons/hicolor/${px}x${px}/apps/$1.png
+	fi
+
+	if [ -f "$1_${px}x${px}-4.png" ]; then
+		echo "Copying $1_${px}x${px}-4.png ..."
+		mkdir -p icons/locolor/${px}x${px}/apps
+		cp $1_${px}x${px}-4.png icons/locolor/${px}x${px}/apps/$1.png
+	elif [ -f "$1-${px}l.png" ]; then
+		echo "Copying $1-${px}l.png ..."
+		mkdir -p icons/locolor/${px}x${px}/apps
+		cp $1-${px}l.png icons/locolor/${px}x${px}/apps/$1.png
+	elif [ -f "$1${px}l.png" ]; then
+		echo "Copying $1${px}l.png ..."
+		mkdir -p icons/locolor/${px}x${px}/apps
+		cp $1${px}l.png icons/locolor/${px}x${px}/apps/$1.png
+	fi
+
+done
+
+if [ -f "$1.svg" ]; then
+	echo "Copying $1.svg ..."
+	mkdir -p icons/hicolor/scalable/apps
+	cp $1.svg icons/hicolor/scalable/apps/$1.svg
+fi
+
+for px in 16 32
+do
+	if [ -f "$1_${px}x${px}-8.png" ]; then
+		echo "Copying $1_${px}x${px}-8.png ..."
+		mkdir -p pixmaps
+		if [ ${px} = 32 ]; then
+			cp $1_${px}x${px}-8.png pixmaps/$1.png
+		else
+			cp $1_${px}x${px}-8.png pixmaps/$1-$px.png
+		fi
+	elif [ -f "$1_${px}x${px}-4.png" ]; then
+		echo "Copying $1_${px}x${px}-4.png ..."
+		mkdir -p pixmaps
+		if [ ${px} = 32 ]; then
+			cp $1_${px}x${px}-4.png pixmaps/$1.png
+		else
+			cp $1_${px}x${px}-4.png pixmaps/$1-$px.png
+		fi
+	elif [ -f "$1-${px}m.png" ]; then
+		echo "Copying $1-${px}m.png ..."
+		mkdir -p pixmaps
+		if [ ${px} = 32 ]; then
+			cp $1-${px}m.png pixmaps/$1.png
+		else
+			cp $1-${px}m.png pixmaps/$1-$px.png
+		fi
+	elif [ -f "$1${px}m.png" ]; then
+		echo "Copying $1${px}m.png ..."
+		mkdir -p pixmaps
+		if [ ${px} = 32 ]; then
+			cp $1${px}m.png pixmaps/$1.png
+		else
+			cp $1${px}m.png pixmaps/$1-$px.png
+		fi
+	elif [ -f "$1-${px}.png" ]; then
+		echo "Copying $1-${px}.png ..."
+		mkdir -p pixmaps
+		if [ ${px} = 32 ]; then
+			cp $1-${px}.png pixmaps/$1.png
+		else
+			cp $1-${px}.png pixmaps/$1-$px.png
+		fi
+	elif [ -f "$1${px}.png" ]; then
+		echo "Copying $1${px}.png ..."
+		mkdir -p pixmaps
+		if [ ${px} = 32 ]; then
+			cp $1${px}.png pixmaps/$1.png
+		else
+			cp $1${px}.png pixmaps/$1-$px.png
+		fi
+	fi
+	if [ -f "pixmaps/$1.png" ]; then
+		convert pixmaps/$1.png pixmaps/$1.xpm
+		sxpm -nod pixmaps/$1.xpm -o pixmaps/$1.xpm
+		sed -i "3d" "pixmaps/$1.xpm"
+		sed -i "/\/\* pixels \*\//d" "pixmaps/$1.xpm"
+		rm pixmaps/$1.png
+	fi
+	if [ -f "pixmaps/$1-16.png" ]; then
+		convert pixmaps/$1-16.png pixmaps/$1-16.xpm
+		sxpm -nod pixmaps/$1-16.xpm -o pixmaps/$1-16.xpm
+		sed -i "3d" "pixmaps/$1-16.xpm"
+		sed -i "/\/\* pixels \*\//d" "pixmaps/$1-16.xpm"
+		rm pixmaps/$1-16.png
+	fi
+done
+
+if [ -f "$1.ico" ]; then
+	echo "Copying $1.ico ..."
+	mkdir -p $1
+	cp $1.ico $1/
+fi
+

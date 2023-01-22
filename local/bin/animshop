@@ -1,0 +1,6 @@
+#!/bin/sh
+XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+export WINEPREFIX="$XDG_CONFIG_HOME/graphics"
+filename="$(winepath -w "$1")"
+sharedir="$(realpath $(dirname $0)/../share)"
+wine-stable "$sharedir/paintshop/Jasc Software Inc/Animation Shop 3/Anim.exe" "$filename"

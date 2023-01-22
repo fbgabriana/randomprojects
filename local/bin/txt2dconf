@@ -1,0 +1,7 @@
+#!/bin/sh
+printf %s\\n "user-db:db_" > ~/db_profile
+DCONF_PROFILE=~/db_profile dconf reset -f /
+DCONF_PROFILE=~/db_profile dconf load / < $1
+cp ~/.config/dconf/db_ $1.db
+rm ~/db_profile ~/.config/dconf/db_
+

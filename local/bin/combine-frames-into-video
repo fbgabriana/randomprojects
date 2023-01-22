@@ -1,0 +1,15 @@
+#!/bin/sh
+
+framerate="30"
+
+if [ -n "$1" ]; then
+	filename=$1
+else
+	filename="output.avi"
+fi
+
+tempfile=/tmp/$filename
+avconv -v info -y -f image2 -r $framerate -i frame-%05d.png -threads 8 -vcodec libx264 -preset veryslow -qp 0 -map 0:0 $tempfile
+cp $tempfile $filename
+rm $tempfile
+

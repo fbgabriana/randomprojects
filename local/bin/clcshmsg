@@ -1,0 +1,5 @@
+#!/bin/csh
+
+echo "You have exited IRAF and are now entering the shell prompt."
+echo "To start IRAF again, type 'cl'."
+echo

@@ -1,0 +1,15 @@
+#!/usr/bin/python
+
+import sys
+import gtk
+
+if len(sys.argv) > 1:
+	if len(sys.argv) > 2:
+		icon_size = int((sys.argv)[2])
+	else:
+		icon_size = 1024
+
+	icon_theme = gtk.icon_theme_get_default()
+	icon_info = icon_theme.lookup_icon((sys.argv)[1], icon_size, 0)
+	if icon_info:
+		print icon_info.get_filename()

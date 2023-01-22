@@ -1,0 +1,26 @@
+#!/usr/bin/perl
+
+open FILE, "build-src" or exit;
+@lines = <FILE>;
+close FILE;
+
+for $line (@lines) {
+	($var, $val) = split /=/, $line;
+	$fields{$var} = $val;
+}
+
+if ($fields{PACKAGE}) {
+open FILE, ">build-src";
+print FILE "#!/bin/sh\n";
+print FILE "\n";
+print FILE "export PACKAGE=$fields{PACKAGE}";
+print FILE "export VERSION=$fields{VERSION}";
+print FILE "export REV=$fields{REV}";
+print FILE "export ARCH=$fields{ARCH}";
+print FILE "export TIMESTAMP=$fields{TIMESTAMP}";
+print FILE "\n";
+print FILE "build-src-common\n";
+print FILE "\n";
+close FILE;
+}
+

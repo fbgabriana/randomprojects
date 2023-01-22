@@ -1,0 +1,2 @@
+#!/bin/sh
+md5deep -rl . | grep -v "\\./md5sum.txt" | sort -k2 > md5sum.txt

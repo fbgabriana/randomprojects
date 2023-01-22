@@ -1,0 +1,76 @@
+#!/usr/bin/perl
+$deb = $ARGV[0] | "*.deb";
+
+$str = `fakeroot alien -rckg $deb`;
+$str =~ s/Directory | prepared\.|\n//g;
+
+($pkg, $ver) = split /-/, $str;
+
+$control = `ls ${pkg}_${ver}-*/DEBIAN/control`;
+
+open FILE, "$control";
+@lines = <FILE>;
+close FILE;
+
+foreach $line (@lines) {
+	chomp $line;
+	if ($line =~ /Version:/) {
+		$Version = (split /: /, $line)[1];
+		$Release = (split /-/, $Version)[1];
+	}
+	if ($line =~ /Architecture:/) {
+		$BuildArch = (split /: /, $line)[1];
+	}
+	if ($line =~ /Homepage:/) {
+		$URL = (split /: /, $line)[1];
+	}
+	if ($line =~ /Depends:/) {
+		$Depends = (split /: /, $line)[1];
+		@Requires = split /,/, $Depends;
+	}
+	if ($line =~ /Section:/) {
+		$Section = (split /: /, $line)[1];
+		if ($Section =~ /science/) {
+			$Group = "Scientific";
+		}
+	}
+}
+
+$spec = "$str-$Release.spec";
+`cp $str/\*.spec ./$spec`;
+
+open FILE, "$spec";
+@lines = <FILE>;
+close FILE;
+
+open FILE, ">$spec";
+foreach $line (@lines) {
+	next if ($line =~ /Buildroot:/);
+	next if ($line =~ /License:/);
+	next if ($line =~ /Release:/);
+	next if ($line =~ /Group:/);
+	next if ($line =~ /Distribution:/);
+	next if ($line =~ /alien/);
+	next if ($line =~ /lintian/);
+	next if ($line =~ /\.Debian/);
+	if ($line =~ /Summary:/) {
+		print FILE "Release: $Release\n";
+		print FILE "Group: Applications/$Group\n";
+		print FILE "License: see /usr/share/doc/$pkg/copyright\n";
+		print FILE "URL: $URL\n";
+		print FILE "BuildArch: $BuildArch\n";
+		print FILE "Icon: $pkg.xpm\n";
+		for $Requires (@Requires) {
+			print FILE "Requires: $Requires\n";
+		}
+		print FILE "Packager: Bamm Gabriana <bamm\@astromedia.ph>\n";
+	}
+	if ($line =~ /%define _rpmdir/) {
+		print FILE "%define _rpmdir ./\n";
+		next
+	}
+	print FILE $line;
+}
+close FILE;
+`rm -rf $str`;
+

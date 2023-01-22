@@ -1,0 +1,7 @@
+#!/bin/sh
+echo "Warning: Executable files will lose their x attribute. Use only for your files."
+echo "Fixing perms..."
+find . -type d -exec chmod 755 {} \;
+find . -type f -exec chmod 644 {} \;
+echo "Done."
+

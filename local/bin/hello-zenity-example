@@ -1,0 +1,11 @@
+#!/usr/bin/perl
+
+my $Message="Hello, world!";
+
+if ( $ENV{'DISPLAY'} && system "tty > /dev/null" ) {
+	`zenity --info --text="$Message" --title="Hello"`;
+}
+else {
+	print "$Message\n";
+}
+

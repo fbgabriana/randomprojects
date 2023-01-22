@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+$deb = $ARGV[0] | "*.deb";
+$str = `fakeroot alien -rckg $deb`;
+$str =~ s/Directory | prepared\.|\n//g;
+
+$spec = "$str-0.spec";
+`cp $str/\*.spec ./$spec`;
+
+open FILE, "$spec";
+@lines = <FILE>;
+close FILE;
+
+open FILE, ">$spec";
+foreach $line (@lines) {
+	next if ($line =~ /Buildroot:/);
+	next if ($line =~ /License:/);
+	next if ($line =~ /Group:/);
+	next if ($line =~ /Distribution:/);
+	next if ($line =~ /alien/);
+	next if ($line =~ /lintian/);
+	next if ($line =~ /\.Debian/);
+	if ($line =~ /Summary:/) {
+		print FILE "Group: Applications\n";
+		print FILE "License: \n";
+		print FILE "URL: \n";
+		print FILE "BuildArch: i386\n";
+		print FILE "Icon: \n";
+		print FILE "Requires: \n";
+		print FILE "Packager: Bamm Gabriana <bamm\@astromedia.ph>\n";
+	}
+	if ($line =~ /%define _rpmdir/) {
+		print FILE "%define _rpmdir ./\n";
+		next
+	}
+	print FILE $line;
+}
+close FILE;
+`rm -rf $str`;
+

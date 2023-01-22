@@ -1,0 +1,131 @@
+#!/bin/sh
+
+################################################################################
+#                                                                              #
+# Distro Astro TEMPLATE                                                        #
+# Version 4.0                                                                  #
+#                                                                              #
+# Copyright (C) 2017-2018 Bamm Gabriana.                                       #
+#                                                                              #
+# This program is free software; you can redistribute it and/or modify         #
+# it under the terms of the GNU General Public License as published by         #
+# the Free Software Foundation; either version 2 of the License, or            #
+# (at your option) any later version.                                          #
+#                                                                              #
+# This program is distributed in the hope that it will be useful,              #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of               #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                #
+# GNU General Public License for more details.                                 #
+#                                                                              #
+# You should have received a copy of the GNU General Public License            #
+# along with this program. If not, see <http://www.gnu.org/licenses/>          #
+#                                                                              #
+# On Debian systems, the complete text of the GNU General Public License       #
+# version 2 and 3 can be found in                                              #
+# "/usr/share/common-licenses/GPL-2" and "/usr/share/common-licenses/GPL-3".   #
+#                                                                              #
+################################################################################
+
+name="Distro Astro TEMPLATE"
+copy="Copyright (C) 2017-2018 Bamm Gabriana."
+exec="$(basename $0)"
+ver="4.0"
+
+input_file="default-input-filename"
+output_file="default-output-filename"
+
+# Parse command line arguments.
+unset optarg
+unset endopts
+for i do
+	shift
+	if [ "$i" = "--" ]; then endopts=$i; continue; fi
+	if [ -z "$endopts" ] && [ "$optarg" ]; then eval "$optarg=\"$i\""; unset optarg; continue; fi
+	if [ -z "$endopts" ] && [ "${i#-}" != "$i" ]; then 
+		if [ "${i#--}" = "$i" ]; then
+		# Get short options
+		if echo "$i" | grep -q "?"; then help="$i"    ; fi
+		if echo "$i" | grep -q "V"; then version="$i" ; fi
+		if echo "$i" | grep -q "v"; then verbose="$i" ; fi
+		if echo "$i" | grep -q "d"; then debug="$i"   ; fi
+		if echo "$i" | grep -q "q"; then quiet="$i"   ; fi
+		if echo "$i" | grep -q "e"; then example="$i" ; fi
+		else
+		# Get long options
+		if [ "$i" = "--help"     ]; then help="$i"    ; fi
+		if [ "$i" = "--version"  ]; then version="$i" ; fi
+		if [ "$i" = "--verbose"  ]; then verbose="$i" ; fi
+		if [ "$i" = "--debug"    ]; then debug="$i"   ; fi
+		if [ "$i" = "--quiet"    ]; then quiet="$i"   ; fi
+		if [ "$i" = "--example"  ]; then example="$i" ; fi
+		fi
+		# Get options with arguments (allow equal sign)
+		if echo "$i" | grep -q "="; then v=$(echo $i | cut -d= -f2); i=$(echo $i | cut -d= -f1); fi
+		if [ "$i" = "-i" -o "$i" = "--input-file"  ]; then optarg="input_file"  ; fi
+		if [ "$i" = "-o" -o "$i" = "--output-file" ]; then optarg="output_file" ; fi
+		if [ "$i" = "-c" -o "$i" = "--create" ]; then optarg="create" ; fi
+		if [ -n "${v+x}" ]; then if [ -n "$optarg" ]; then eval "$optarg=\"$v\""; unset optarg; fi; unset v; fi
+	elif [ -z "$endopts" ] && [ "${i#+}" != "$i" ]; then
+		# Get short options beginning with +
+		if echo "$i" | grep -q "e"; then example="$i" ; fi
+	else
+		# Get non-option arguments.
+		set -- "$@" "$i"
+	fi
+done
+
+main() {
+	echo "help=$help"
+	echo "version=$version"
+	echo "verbose=$verbose"
+	echo "debug=$debug"
+	echo "quiet=$quiet"
+	echo "example=$example"
+	echo "create=$create"
+	echo "input-file=$input_file"
+	echo "output-file=$output_file"
+	echo "args:"
+	for i do
+		echo "$i"
+	done
+}
+
+create() {
+	echo -n "Creating new script from template..."
+	cp $(which $exec) $create
+	echo "Done."
+}
+
+showhelp() {
+	echo "Usage: $exec [OPTION]... [ARGS]..."
+	echo ""
+	echo "A template for creating shell scripts for POSIX shells."
+	echo ""
+	echo "  -e, +e, --example          this example can use -, +, or --"
+	echo "  -i, --input=[FILE]         get the input from FILE"
+	echo "  -o, --output=[FILE]        place the output into FILE"
+	echo "  -q, --quiet    don't display any output"
+	echo "  -v, --verbose  turn on verbose mode"
+	echo "      --debug    turn on debug mode"
+	echo "      --help     display this help and exit"
+	echo "      --version  output version information and exit"
+	echo ""
+	echo "Report $exec bugs to Bamm Gabriana <bamm@distroastro.org>"
+	echo "Distro Astro home page: <http://www.distroastro.org/>"
+}
+
+showversion() {
+	echo "$exec $ver"
+	echo "$copy"
+	echo "License GPLv2+: GPL version 2 or later <http://gnu.org/licenses/gpl-2.0.html>."
+	echo "This is free software: you are free to change and redistribute it."
+	echo "There is NO WARRANTY, to the extent permitted by law."
+	echo ""
+	echo "Written by Bamm Gabriana."
+}
+
+[ -n "$create" ] && create && exit
+[ -n "$help" ] && showhelp && exit
+[ -n "$version" ] && showversion && exit
+main
+

@@ -1,0 +1,7 @@
+#!/bin/sh
+
+ar -x $1
+tar -xf control.tar.gz ./control
+rm -f control.tar.gz
+rm -f data.tar.gz
+rm -f debian-binary

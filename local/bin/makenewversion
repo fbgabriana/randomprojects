@@ -1,0 +1,57 @@
+#!/usr/bin/perl
+
+open FILE, "debian/changelog" or exit;
+@lines = <FILE>;
+close FILE;
+
+@fields = split / /, $lines[0];
+
+$package = $fields[0];
+
+$fields[1] =~ s/\(|\)//g;
+
+($rev, @ver) = reverse(split /-/, $fields[1]);
+
+$version = join "-", reverse(@ver);
+
+$newversion = $ARGV[0];
+
+die "makenewversion: $package-$version.tar.gz not found.\n" if (! -e "$package-$version.tar.gz");
+
+exit if $newversion le $version;
+
+print "Creating $package version $newversion...\n";
+
+for ($i = 0; $i <= @lines; $i++) {
+	if ($lines[$i] =~ m/^ -- /) {
+		$datestring = $lines[$i] if (!$datestring);
+	}
+}
+
+@months = qw( Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec );
+@days = qw(Sun Mon Tue Wed Thu Fri Sat Sun);
+
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime();
+$year += 1900;
+$mday = sprintf "%02d", $mday;
+
+$datestring =~ s/ -- (.+)  (.+)/ -- $1  $days[$wday], $mday $months[$mon] $year 00:00:00 +0800/;
+
+open FILE, ">debian/changelog" or exit;
+print FILE "$package ($newversion-$rev) unstable; urgency=low\n";
+print FILE "\n";
+print FILE "  * New upstream release.\n";
+print FILE "\n";
+print FILE "$datestring\n";
+print FILE @lines;
+close FILE;
+
+`rm -rf ${package}-${newversion}`;
+mkdir "${package}-${newversion}";
+system("tar xfz ${package}-${version}.tar.gz --strip-components=1 -C ${package}-${newversion}");
+system("stamp");
+system("env GZIP=-9 tar cfz ${package}-${newversion}.tar.gz ${package}-${newversion}");
+`rm -rf ${package}-${newversion}`;
+
+print "Done.\n";
+

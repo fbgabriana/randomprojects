@@ -1,0 +1,10 @@
+#!/bin/bash
+
+count=1
+for i in *.png; do
+	tmp=$(printf "tmp-frame-%05d.png" "$count")
+	mv -- "$i" "$tmp"
+	let count=count+1
+done
+rename s/tmp-frame-/frame-/ *
+

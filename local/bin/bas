@@ -1,0 +1,8 @@
+#!/bin/sh
+
+b2c "$1" > /tmp/.a.c
+gcc /tmp/.a.c -o /tmp/.a.out
+/tmp/.a.out
+rm /tmp/.a.c
+rm /tmp/.a.out
+

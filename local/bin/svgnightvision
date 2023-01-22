@@ -1,0 +1,55 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my @files = <*.svg>;
+
+foreach my $file (@files) {
+
+	open FILE, "$file";
+	my @lines = <FILE>;
+	close FILE;
+
+	for my $line (@lines) {
+		if ($line =~ m/color:#(.)(.)(.)(.)(.)(.);/) {
+			my ($a,$b,$c,$d,$e,$f) = ($1,$2,$3,$4,$5,$6);
+			$line =~ s/$c$d$e$f;/1a1a;/g;
+		}
+		if ($line =~ m/color="#(.)(.)(.)(.)(.)(.)"/) {
+			my ($a,$b,$c,$d,$e,$f) = ($1,$2,$3,$4,$5,$6);
+			$line =~ s/$c$d$e$f"/1a1a"/g;
+		}
+		if ($line =~ m/stroke:#(.)(.)(.)(.)(.)(.);/) {
+			my ($a,$b,$c,$d,$e,$f) = ($1,$2,$3,$4,$5,$6);
+			$line =~ s/$c$d$e$f;/1a1a;/g;
+		}
+		if ($line =~ m/fill:#(.)(.)(.)(.)(.)(.);/) {
+			my ($a,$b,$c,$d,$e,$f) = ($1,$2,$3,$4,$5,$6);
+			$line =~ s/$c$d$e$f;/1a1a;/g;
+		}
+		if ($line =~ m/color:#(.)(.)(.);/) {
+			my ($a,$b,$c) = ($1,$2,$3);
+			$line =~ s/color:#$a$b$c;/color:#${a}${a}1a1a;/g;
+		}
+		if ($line =~ m/color="#(.)(.)(.)"/) {
+			my ($a,$b,$c) = ($1,$2,$3);
+			$line =~ s/color="#$a$b$c"/${a}${a}1a1a"/g;
+		}
+		if ($line =~ m/stroke:#(.)(.)(.);/) {
+			my ($a,$b,$c) = ($1,$2,$3);
+			$line =~ s/stroke:#$a$b$c;/stroke:#${a}${a}1a1a;/g;
+		}
+		if ($line =~ m/fill:#(.)(.)(.);/) {
+			my ($a,$b,$c) = ($1,$2,$3);
+			$line =~ s/fill:#$a$b$c;/fill:#${a}${a}1a1a;/g;
+		}
+		if ($line =~ m/white;/) {
+			$line =~ s/white;/#ff1a1a;/g;
+		}
+	}
+
+	open FILE, ">$file";
+	print FILE @lines;
+	close FILE;
+}
+

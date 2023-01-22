@@ -1,0 +1,71 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+sub main {
+	for my $regfile (@ARGV) {
+		sortregfile($regfile);
+	}
+}
+
+sub sortregfile {
+
+	my $regfile = $_[0] || "";
+	my $output = $_[1] || $regfile;
+
+	my $regcontent = "";
+	if ($regfile) {
+		open FILE, "$regfile";
+		$regcontent = join "", <FILE>;
+		close FILE;
+	}
+
+	$regcontent = regsort($regcontent);
+
+	open FILE, ">$output";
+	print FILE $regcontent;
+	close FILE;
+
+}
+
+sub regsort {
+
+	my $regcontent = $_[0] || "";
+
+	$regcontent =~ s/]\n/.]\n/g;
+
+	my @entries = split /\n\n\[/, $regcontent;
+
+	my $header = shift @entries;
+
+	for my $entry (@entries) {
+		$entry =~ s/\\\n  /\\\|/g;
+		my @lines = split "\n", $entry;
+		my @values = ();
+		for my $line (@lines) {
+			if ($line =~ /^"/) {
+				push @values, $line;
+			}
+		}
+		for my $i (reverse 0..$#lines) {
+			if ( $lines[$i] =~ /^"/ ) {
+				splice(@lines, $i, 1, ());
+			}
+		}
+
+		$entry = join "\n", (@lines, sort @values);
+		$entry =~ s/\\\|/\\\n  /g;
+	}
+
+	@entries = sort @entries;
+	unshift @entries, $header;
+
+	$regcontent = join "\n\n[", @entries;
+
+	$regcontent =~ s/.]\n/]\n/g;
+
+	return $regcontent;
+}
+
+main();

@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+chdir "$ARGV[0]" if $ARGV[0];
+$output = "DEBIAN/md5sums";
+$dir = $ARGV[1] || "/usr/";
+$str = `find .$dir -type f -exec md5sum {} \\;`;
+$str =~ s/ \.\// /g;
+if ($ARGV[1]) {
+	open FILE, ">>$output";
+	print FILE $str;
+	close FILE;
+}
+else {
+	open FILE, ">$output";
+	print FILE $str;
+	close FILE;
+}
+

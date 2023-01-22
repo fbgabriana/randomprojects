@@ -1,0 +1,55 @@
+#!/usr/bin/perl -w
+# Launcher for Microsoft Office Word
+
+use strict;
+use warnings;
+
+my $VERSION = "11";
+my $EXEFILE = "C:\\Program Files\\Microsoft Office\\OFFICE11\\WINWORD.EXE";
+my $WINEPREFIX = "$ENV{'HOME'}/.local/share/wineprefixes/msoffice";
+my $SCRIPTNAME = (split(/\//, "$0"))[-1];
+
+for my $arg (@ARGV) {
+	if (-e "$arg") {
+		$arg =~ s/\//\\/g;
+		$arg = "z:$arg" if ($arg =~ m/^\\/);
+		$arg =~ s/^|$/"/g;
+	}
+	else {
+		if ($arg =~ s/^--|^\///) {
+			&showversion if ($arg eq "version");
+			&showhelp if ($arg eq "help" or $arg eq "?");
+			$arg = "/$arg";
+		}
+		elsif ($arg =~ s/^-//) {
+			my @switches = split(//, $arg);
+			s/^/\// for (@switches);
+			$arg = join(" ", @switches);
+		}
+		else {
+			$arg =~ s/^|$/"/g if ($arg =~ / /);
+		}
+	}
+}
+
+`exec env WINEPREFIX="$WINEPREFIX" wine "$EXEFILE" @ARGV` and exit;
+
+sub showversion {
+print "$SCRIPTNAME $VERSION
+Copyright (C) 1983-2003 Microsoft Corporation. All rights reserved.
+Warning: This computer program is protected by copyright law and international
+treaties. Unauthorized reproduction or distribution of this program, or any
+portion of it, may result in severe civil and criminal penalties, and will be
+prosecuted to the maximum extent possible under the law.
+" and exit;
+}
+
+sub showhelp {
+print "Usage: $SCRIPTNAME [OPTION]... [FILE]...
+
+      --help     display this help and exit
+      --version  output version information and exit
+
+" and exit;
+}
+

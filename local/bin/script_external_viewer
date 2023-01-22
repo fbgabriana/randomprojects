@@ -1,0 +1,123 @@
+#!/bin/sh
+
+################################################################################
+#                                                                              #
+# Script External Viewer for Nightshade - Distro Astro Edition                 #
+# Version 1.1                                                                  #
+#                                                                              #
+# Copyright (C) 2015-2016 Bamm Gabriana.                                       #
+#                                                                              #
+# This program is free software; you can redistribute it and/or modify         #
+# it under the terms of the GNU General Public License as published by         #
+# the Free Software Foundation; either version 2 of the License, or            #
+# (at your option) any later version.                                          #
+#                                                                              #
+# This program is distributed in the hope that it will be useful,              #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of               #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                #
+# GNU General Public License for more details.                                 #
+#                                                                              #
+# You should have received a copy of the GNU General Public License            #
+# along with this program. If not, see <http://www.gnu.org/licenses/>          #
+#                                                                              #
+# On Debian systems, the complete text of the GNU General Public License       #
+# version 2 and 3 can be found in                                              #
+# "/usr/share/common-licenses/GPL-2" and "/usr/share/common-licenses/GPL-3".   #
+#                                                                              #
+################################################################################
+
+# Select one of the following by uncommenting the other.
+PLAYER="mplayer"
+PLAYER="vlc"
+
+scriptname="$(basename $0)"
+ver="1.1"
+
+case $PLAYER in
+	"mplayer")
+		RUNCOMMAND="mplayer -fs -osdlevel 0"
+		KILLCOMMAND="mplayer"
+	;;
+	"vlc")
+		RUNCOMMAND="cvlc --fullscreen --no-osd --play-and-exit"
+		KILLCOMMAND="vlc"
+	;;
+	*)
+		echo "Unsupported player: \`$PLAYER'. Currently supports only mplayer and vlc."
+	;;
+esac
+
+case $1 in
+	"start")
+		killall $KILLCOMMAND 2> /dev/null
+		if [ -f "$2" ]; then
+			echo "Playing file $2..."
+			eval "$RUNCOMMAND $2 &"
+			exitcode=0
+		elif [ -n "$2" ]; then
+			echo "$scriptname: cannot access ‘$2’: No such file or directory."
+			exitcode=1
+		else
+			echo "$scriptname: missing operand."
+			echo "Type \`$scriptname help' for usage."
+			exitcode=1
+		fi
+	;;
+	"pause")
+		killall -s STOP $KILLCOMMAND 2> /dev/null
+		exitcode=$?
+		[ "$exitcode" = "0" ] && echo "$scriptname: $1 $KILLCOMMAND."
+		[ "$exitcode" = "1" ] && echo "$scriptname: Nothing to $1."
+	;;
+	"resume")
+		killall -s CONT $KILLCOMMAND 2> /dev/null
+		exitcode=$?
+		[ "$exitcode" = "0" ] && echo "$scriptname: $1 $KILLCOMMAND."
+		[ "$exitcode" = "1" ] && echo "$scriptname: Nothing to $1."
+	;;
+	"stop")
+		killall -s CONT $KILLCOMMAND 2> /dev/null
+		killall $KILLCOMMAND 2> /dev/null
+		exitcode=$?
+		[ "$exitcode" = "0" ] && echo "$scriptname: $1 $KILLCOMMAND."
+		[ "$exitcode" = "1" ] && echo "$scriptname: Nothing to $1."
+	;;
+	"help")
+		echo "Usage: $scriptname [OPTION] [FILE]"
+		echo
+		echo "Options are:"
+		echo "  start FILE    play the video FILE"
+		echo "  pause         pause the currently playing video"
+		echo "  resume        resume the currently paused video"
+		echo "  stop          pause the currently playing video"
+		echo "  help          display this help and exit"
+		echo "  version       output version information and exit"
+		echo
+		echo "Report $scriptname bugs to bamm@distroastro.org"
+		echo "Nightshade home page: <http://http://www.nightshadesoftware.org/>"
+		echo "Nightshade APT repository: <http://packages.distroastro.org/nightshade/>"
+		exitcode=0
+	;;
+	"version")
+		echo "$scriptname $ver"
+		echo "Copyright (C) 2015 Bamm Gabriana."
+		echo "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>."
+		echo "This is free software: you are free to change and redistribute it."
+		echo "There is NO WARRANTY, to the extent permitted by law"
+		echo
+		echo "Written by Bamm Gabriana."
+		exitcode=0
+	;;
+	"")
+		echo "$scriptname: missing operand."
+		echo "Type \`$scriptname help' for usage."
+		exitcode=1
+	;;
+	*)
+		echo "Unknown option: \`$1'."
+		echo "Type \`$scriptname help' for usage."
+		exitcode=2
+	;;
+esac
+exit $exitcode
+

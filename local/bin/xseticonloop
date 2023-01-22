@@ -1,0 +1,10 @@
+#!/bin/sh
+title="$1"
+icon="$2"
+timeout="$3"
+if [ -n "$title" -a -n "$icon" -a -n "$timeout" ]; then
+	timeend=$(( $(date +%s) + $timeout ))
+	until [ $(date +%s) -gt $timeend ] || wmctrl -l | grep "$title" > /dev/null; do :; done
+	xseticon -name "$title" "$icon" 2> /dev/null
+fi
+

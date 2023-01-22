@@ -1,0 +1,96 @@
+#!/usr/bin/perl
+
+if ((join " ", @ARGV) eq "install") {
+	system "sudo dpkg -i binary/*.deb";
+	system "stamp $timestamp";
+    exit;
+}
+
+if ((join " ", @ARGV) eq "and install") {
+	system "sudo true";
+}
+
+system("tar xf *.debian.tar.?z 2>/dev/null");
+
+open FILE, "debian/changelog" or exit;
+@lines = <FILE>;
+close FILE;
+
+@fields = split / /, $lines[0];
+
+$package = $fields[0];
+
+$fields[1] =~ s/\(|\)//g;
+$fields[1] =~ s/^1://g;
+
+($rev, @ver) = reverse(split /-/, $fields[1]);
+
+$version = join "-", reverse(@ver);
+
+for ($i = 0; $i <= @lines; $i++) {
+	if ($lines[$i] =~ m/^ -- /) {
+		$datestring = $lines[$i] if (!$datestring);
+	}
+}
+($b, $d, $mon, $y, $h, $m, $s) = split / |:/, (split /,/, $datestring)[1];
+
+%mon2num = qw(
+	Jan 01 Feb 02 Mar 03 Apr 04 May 05 Jun 06
+	Jul 07 Aug 08 Sep 09 Oct 10 Nov 11 Dec 12
+);
+
+$n = $mon2num{"$mon"};
+
+$timestamp = $ENV{TIMESTAMP} || "$y$n$d$h$m.$s";
+
+if (! -e "$package-$version.tar.gz") {
+	if (! -e "$package-$version.tar.bz2") {
+		if (! -e "$package-$version.tar.xz") {
+			if (-d "$package-$version") {
+				print "Creating $package-$version.tar.gz...\n";
+				# system "stamp $timestamp";
+				system "env GZIP=-9 tar cfz $package-$version.tar.gz $package-$version/";
+			}
+	        elsif (-e "${package}_${version}.orig.tar.gz") {
+				print "Renaming ${package}_${version}.orig.tar.gz to $package-$version.tar.gz...\n";
+	            rename( "${package}_${version}.orig.tar.gz" , "$package-$version.tar.gz" );
+	        }
+	        elsif (-e "${package}_${version}.orig.tar.bz2") {
+				print "Renaming ${package}_${version}.orig.tar.bz2 to $package-$version.tar.bz2...\n";
+	            rename( "${package}_${version}.orig.tar.bz2" , "$package-$version.tar.bz2" );
+	        }
+	        elsif (-e "${package}_${version}.orig.tar.xz") {
+				print "Renaming ${package}_${version}.orig.tar.xz to $package-$version.tar.xz...\n";
+	            rename( "${package}_${version}.orig.tar.xz" , "$package-$version.tar.xz" );
+	        }
+			else {
+				print "makepackage: error: $package-$version.tar.{bz2,gz,xz} not found. Exiting.\n";
+				exit;
+			}
+		}
+	}
+}
+#system "stamp $timestamp";
+
+$tempfile = "/tmp/$package-$version-$rev-$timestamp";
+
+open FILE, ">$tempfile";
+print FILE "#!/bin/sh\n\n";
+print FILE "export PACKAGE=$package\n";
+print FILE "export VERSION=$version\n";
+print FILE "export REV=$rev\n";
+print FILE "export ARCH=$ENV{'ARCH'}\n";
+print FILE "export TIMESTAMP=$timestamp\n\n";
+print FILE "build-src-common $1\n";
+close FILE;
+
+system("sh $tempfile");
+unlink "$tempfile";
+system "stamp $timestamp";
+
+if ((join " ", @ARGV) eq "and install") {
+	system "sudo dpkg -i binary/*.deb";
+	system "stamp $timestamp";
+}
+system "stamp $timestamp";
+

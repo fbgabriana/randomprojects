@@ -1,0 +1,6 @@
+#!/bin/sh
+
+trap "" INT
+timeend=$(( $(date +%s) + 3 )); until [ $(date +%s) -gt $timeend ]; do :; done
+trap - INT
+

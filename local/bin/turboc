@@ -1,0 +1,105 @@
+#!/usr/bin/perl -w
+# Launcher for Turbo C++
+
+use strict;
+use warnings;
+
+my $exec = $0; $exec =~ s#^.*/##;
+my $ver = "3.0";
+
+my $runpath = `echo -n \$(cat ~/.turboc)`;
+my $runfile = "$runpath/TC.BAT";
+
+# Check if DOSBox is installed.
+if (! `which dosbox`) {
+	my $Message = "DOSBox is not installed. Please install the 'dosbox' package and try again.";
+	if ( $ENV{'DISPLAY'} && system "tty > /dev/null" ) {
+		`zenity --error --text="$Message" --title="Turbo C++" --width="400"`;
+	}
+	else {
+		print "$Message\n";
+	}
+	exit 1;
+}
+
+# Convert arguments to DOS-style.
+my $i = 0;
+for my $arg (@ARGV) {
+	if ($arg =~ s/^--|^\///) {
+		$arg = "/$arg";
+	}
+	elsif ($arg =~ s/^-//) {
+		my @s = split(//, $arg);
+		s/^/\// for (@s);
+		splice @ARGV, $i, 1, @s;
+	}
+	if (-e "$arg") {
+		$arg = `echo -n "\$(cd "\$(dirname "$arg")"; pwd)/\$(basename "$arg")"`;
+		$arg =~ s/$ENV{HOME}/C:\/HOME/g;
+		$arg =~ s/^\//C:\/SYS\\/g;
+		$arg =~ s/\//\\/g;
+		$arg =~ s/^|$/"/g if ($arg =~ / /);
+	}
+	$arg =~ s/^|$/"/g if ($arg =~ / /);
+	$i++;
+}
+
+# These arguments are used internally by the script
+# and will not be passed to the program.
+my ($help, $version, $debug);
+@ARGV = grep {
+	$help++		if /\/(help|\?)/;
+	$version++	if /\/version/;
+	$debug++	if /\/debug/;
+	!/\/(help|\?|version|debug)/;
+} @ARGV;
+
+sub main {
+	my $devnull = $debug ? "" : "> /dev/null 2>&1";
+	open FILE, ">$runfile";
+	print FILE "\@ECHO OFF\n";
+	print FILE "PATH=\%PATH%;C:\\TC\\BIN;C:\\TC\\OUTPUT\n";
+	print FILE "CALL C:\\TC\\BIN\\TC.EXE @ARGV\n";
+	close FILE;
+	system "ln -s / $runpath/SYS $devnull";
+	system "ln -s $ENV{'HOME'} $runpath/HOME $devnull";
+	my $exitstatus = system "dosbox -exit $runfile -fullscreen $devnull";
+	system "cat $runfile" if $debug;
+	system "rm -f $runpath/HOME $devnull";
+	system "rm -f $runpath/SYS $devnull";
+	system "rm -f $runfile $devnull";
+	system "rm -f $runpath/TC*.SWP $devnull";
+	exit $exitstatus;
+}
+
+sub showhelp {print <<DOC;
+Turbo C++ Version 3.0  Copyright (c) 1990, 1992 Borland International
+Syntax:   TC [option [option...]] [srcname|projname [srcname...]]
+
+srcname  is any ASCII file (default extension assumed)
+projname is a project file (must have .PRJ extension)
+option   is any of the following: (/x- = turn option x off):
+ /b              batch mode build project then exit
+ /d              dual monitor mode, IDE uses other monitor
+ /e[=n]       *  use n pages of expanded memory for swapping
+ /h              displays this help
+ /l              LCD/B&W colors for screen
+ /m              batch mode make project then exit
+ /p              restore palette on EGA after swap
+ /rx             use alternate disk 'x' for swap file
+ /s           *  allow maximum swapping (thrashing)
+ /x[=n]          use n KB for the code and data memory pool
+
+              *  means enabled by default
+DOC
+}
+
+sub showversion {print <<DOC;
+Turbo C++ Version 3.0  Copyright (c) 1990, 1992 Borland International
+DOC
+}
+
+showhelp and exit if ($help);
+showversion and exit if ($version);
+main;
+

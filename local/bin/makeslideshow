@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+
+die "Usage: makeslideshow TITLE [DURATION in minutes] [TRANSITION in seconds]\n" if !@ARGV;
+
+my $title = $ARGV[0] || "background-1.xml";
+my $trans = $ARGV[2] || 5;
+my $duration = ($ARGV[1] || 30) * 60 - $trans;
+my $filelist = "/tmp/filelist.txt";
+
+`ls > $filelist`;
+open FILE, "$filelist";
+foreach $file (<FILE>) {
+	push @files, $file if ($file =~ m/\.jpg$|\.jpeg$|\.png$/);
+}
+close FILE;
+`rm -f $filelist`;
+
+open FILE, ">$ARGV[0]";
+print FILE "<?xml version=\"1.0\"?>
+<background>
+  <starttime>
+    <hour>00</hour>
+    <minute>00</minute>
+    <second>00</second>
+  </starttime>";
+my $i = 0;
+while ($i < @files) {
+chomp ($file = $files[$i]);
+chomp ($next = $files[$i + 1] || $files[0]);
+print FILE "
+  <static>
+    <duration>$duration</duration>
+    <file>/usr/share/backgrounds/$ARGV[0]/$file</file>
+  </static>
+  <transition>
+    <duration>$trans</duration>
+    <from>/usr/share/backgrounds/$ARGV[0]/$file</from>
+    <to>/usr/share/backgrounds/$ARGV[0]/$next</to>
+  </transition>";
+$i++;
+}
+print FILE "
+</background>
+";
+close FILE;
+

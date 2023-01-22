@@ -1,0 +1,12 @@
+#!/bin/sh
+
+for i in "$@"; do
+	script="$(which "$i")"
+	if [ -w "$script" ]; then
+		echo "$script";
+		gedit "$script" 2>/dev/null &
+	else
+		sudo echo "$script";
+		sudo gedit "$script" 2>/dev/null &
+	fi
+done

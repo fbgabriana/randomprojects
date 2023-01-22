@@ -1,0 +1,19 @@
+#!/bin/sh
+
+ip=$(dig +short myip.opendns.com @resolver1.opendns.com)
+lookup=$(geoiplookup "$ip" | grep "City" | cut -d':' -f2)
+lat=$(echo "$lookup" | cut -d',' -f6 | xargs)
+lon=$(echo "$lookup" | cut -d',' -f7 | xargs)
+tmpfile="/tmp/lookup"
+url="https://nominatim.openstreetmap.org/reverse?format=json&lat=$lat&lon=$lon"
+json=$(wget -qO- "$url")
+city=$(echo "$json" | grep -o -P '(?<="display_name":").*(?=","address")' | rev | cut -d',' -f4 | rev | xargs)
+region=$(echo "$json" | grep -o -P '(?<="display_name":").*(?=","address")' | rev | cut -d',' -f3 | rev | xargs)
+country=$(echo "$json" | grep -o -P '(?<="display_name":").*(?=","address")' | rev | cut -d',' -f1 | rev | xargs)
+echo "IP Address: $ip"
+echo "Latitude:   $lat"
+echo "Longitude:  $lon"
+echo "City:       $city"
+echo "Region:     $region"
+echo "Country:    $country"
+

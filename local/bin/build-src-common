@@ -1,0 +1,99 @@
+#!/bin/sh
+
+binary="binary"
+if [ "$ARCH" = "i386" ]; then
+	binary="binary32"
+fi
+if [ -z "$ARCH" ]; then
+	rm -rf $binary
+fi
+rm -rf debug
+rm -rf source
+rm -rf ${PACKAGE}-${VERSION}
+rm -f *.orig.tar.gz
+rm -f *.orig.tar.bz2
+rm -f *.orig.tar.xz
+rm -f *.debian.tar.gz
+rm -f *.debian.tar.xz
+rm -f *.diff.gz
+rm -f *.dsc
+rm -f *.changes
+rm -f *.build
+echo Extracting archive...
+mkdir -p ${PACKAGE}-${VERSION}
+if [ -f ${PACKAGE}-${VERSION}.tar.gz ]; then
+	tar xfz ${PACKAGE}-${VERSION}.tar.gz --strip-components=1 -C ${PACKAGE}-${VERSION}
+fi
+if [ -f ${PACKAGE}-${VERSION}.tar.bz2 ]; then
+	tar xfj ${PACKAGE}-${VERSION}.tar.bz2 --strip-components=1 -C ${PACKAGE}-${VERSION}
+fi
+if [ -f ${PACKAGE}-${VERSION}.tar.xz ]; then
+	tar xf ${PACKAGE}-${VERSION}.tar.xz --strip-components=1 -C ${PACKAGE}-${VERSION}
+fi
+echo Copying debian directory...
+#BINARIES="debian/source/include-binaries"
+#find debian | grep \.png$ | sort > ${BINARIES}
+#if [ ! -s ${BINARIES} ]; then
+#	rm -f ${BINARIES}
+#fi
+rm -rf ${PACKAGE}-${VERSION}/debian
+cp -r debian ${PACKAGE}-${VERSION}
+cp ${PACKAGE}_${VERSION}-${REV}.dsc ${PACKAGE}-${VERSION} > /dev/null 2>&1
+
+echo Time stamping...
+find . -exec touch -t ${TIMESTAMP} {} \;
+echo Creating original source...
+if [ -f ${PACKAGE}-${VERSION}.tar.gz ]; then
+	cp ${PACKAGE}-${VERSION}.tar.gz ${PACKAGE}_${VERSION}.orig.tar.gz
+fi
+if [ -f ${PACKAGE}-${VERSION}.tar.bz2 ]; then
+	cp ${PACKAGE}-${VERSION}.tar.bz2 ${PACKAGE}_${VERSION}.orig.tar.bz2
+fi
+if [ -f ${PACKAGE}-${VERSION}.tar.xz ]; then
+	cp ${PACKAGE}-${VERSION}.tar.xz ${PACKAGE}_${VERSION}.orig.tar.xz
+fi
+echo Entering source folder...
+cd ${PACKAGE}-${VERSION}
+echo Building package...
+dpkg-buildpackage -rfakeroot -a${ARCH} $1
+echo Leaving source folder...
+cd ..
+echo Cleanup...
+rm -rf ${PACKAGE}-${VERSION} # Deletes the directory
+if [ -f ${PACKAGE}_${VERSION}-${REV}_*.changes ]; then
+rm -f ${PACKAGE}_${VERSION}-${REV}_*.changes
+rm -f ${PACKAGE}_${VERSION}-${REV}_*.build
+else
+rm -f *.orig.tar.gz
+rm -f *.orig.tar.bz2
+rm -f *.orig.tar.xz
+rm -f *.debian.tar.gz
+rm -f *.debian.tar.xz
+rm -f *.diff.tar.gz
+rm -f *.dsc
+echo There were errors.
+echo Done.
+exit
+fi
+mkdir -p source
+find . -exec touch -t ${TIMESTAMP} {} \;
+if [ -e ${PACKAGE}_${VERSION}-${REV}.tar.* ]; then
+mv ${PACKAGE}_${VERSION}-${REV}.tar.* source > /dev/null 2>&1
+rm ${PACKAGE}_${VERSION}.orig.tar.* > /dev/null 2>&1
+else
+mv ${PACKAGE}_${VERSION}.orig.tar.* source > /dev/null 2>&1
+fi
+mv ${PACKAGE}_${VERSION}-${REV}.debian.tar.* source > /dev/null 2>&1
+mv ${PACKAGE}_${VERSION}-${REV}.diff.* source > /dev/null 2>&1
+mv ${PACKAGE}_${VERSION}-${REV}.dsc source > /dev/null 2>&1
+mkdir -p $binary
+mv *.deb $binary > /dev/null 2>&1
+mkdir -p debug
+mv *.ddeb debug > /dev/null 2>&1
+mv *.buildinfo debug > /dev/null 2>&1
+rmdir debug --ignore-fail-on-non-empty
+echo Checking source packages...
+lintian source/*.dsc
+echo Checking $binary packages...
+lintian $binary/*.deb
+echo Done.

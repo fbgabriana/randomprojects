@@ -1,0 +1,24 @@
+#!/bin/sh
+
+SFX=`dirname $0`/sfx.sh
+TMPDIR=`mktemp -d /tmp/makesfx-XXXXXXXXXXXX`
+ARCHIVE=$TMPDIR/archive.tar.gz
+CURDIR=`pwd`
+DEFOUT=self-extracting
+
+if [ -n "$2" ]; then
+	OUTFILE=$2
+else
+	OUTFILE=$DEFOUT
+fi
+
+cd $1
+tar czf $ARCHIVE *
+cd $CURDIR
+
+cat $SFX $ARCHIVE > $OUTFILE
+
+chmod +x $OUTFILE
+
+rm -rf $TMPDIR
+

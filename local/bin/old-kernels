@@ -1,0 +1,3 @@
+#!/bin/sh
+dpkg -l linux-* | grep -v \\-dev | awk '/^ii/{ print $2}' | grep -v -e `uname -r | cut -f1,2 -d"-"` | grep -e [0-9]
+

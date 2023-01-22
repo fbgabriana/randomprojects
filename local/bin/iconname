@@ -1,0 +1,3 @@
+#!/bin/sh
+gvfs-info -a standard::icon "$1" | grep standard::icon | awk '{print $2}' | sed 's/,$//'
+

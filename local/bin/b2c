@@ -1,0 +1,151 @@
+#!/usr/bin/perl -w
+use strict;
+
+my $inputfile = @ARGV ? "$ARGV[0]" : "";
+
+sub WriteHeaders {
+print "
+/*************************/
+/* BASIC to C Translator */
+/*************************/
+
+/***********/
+/* Headers */
+/***********/
+
+#include <ctype.h>
+#include <math.h>
+#include <setjmp.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+";
+}
+
+sub WriteMain {
+print "
+/****************/
+/* Main Program */
+/****************/
+
+int main(int argc, char *argv[])
+{
+";
+&WriteCode($inputfile);
+print "}\n\n";
+}
+
+sub WriteCode {
+	$inputfile = $_[0];
+
+	open FILE, "$inputfile" or return;
+	my @lines = split /\n/, (join '', <FILE>);
+	close FILE;
+
+	shift @lines if $lines[0] =~ /^\#!/;
+
+	for my $line (@lines) {
+		print &LineTranslate($line) . "\n";
+	}
+}
+
+sub LineTranslate {
+	my ($line, $w, $comment, $command, $string, $cline);
+
+	$line = $_[0];
+
+	# Preserve blank lines
+	return "" if ($line eq "");
+
+	# Preserve white space before the lines
+	$line =~ s/^(\s+?|)(.*)//; $line = $2; $w = $1;
+
+	# Separate the comment from the line
+	$line =~ /((.*?)(("(.*?)"(.*?))*?)(\s*?))('(.*)|)$/;
+	$line = "$1";
+	$comment = $8 ? "$7//$9" : "";
+
+	# Get the command from the first word
+	($command) = split /\s/, $line;
+	$string = substr($line, length($command) + 1) if $command;
+
+	# Make the command case insensitive
+	$command = $command ? lc $command : "";
+
+	# Translate command
+	if ("$command" eq "rem") {
+		$cline = "/*$string*/";
+		$comment =~ s/^\s+//g;
+	}
+	elsif ("$command" eq "end") {
+		$string =~ s/^\s+|\s+$//g;
+		my $exitcode = $string || 0;
+		$cline = "return $exitcode;";
+	}
+	elsif ("$command" eq "shell") {
+		$string =~ s/^\s+|\s+$//g;
+		$cline = "system($string);";
+	}
+	elsif ("$command" eq "print") {
+		$string =~ s/^\s+|\s+$//g;
+		if ($string =~ /".*?"/) {
+			$cline = "printf(\"%s\\n\", $string);";
+		}
+		else {
+			$string =~ s/\//\/ (float)/;
+			$cline = "printf(\" %G\\n\", (float) $string);";
+		}
+	}
+	elsif ("$command" eq "dim") {
+		my ($variable, $as, $type) = split /\s/, $string;
+		my $suf = (split //, $variable)[-1];
+		if ($suf eq "\$") {
+			$type = "string";
+		}
+		elsif ($suf eq "\%") {
+			$type = "integer";
+		}
+		elsif ($suf eq "\&") {
+			$type = "long";
+		}
+		elsif ($suf eq "\!") {
+			$type = "single";
+		}
+		elsif ($suf eq "\#") {
+			$type = "double";
+		}
+		$type = lc $type;
+		if ($type eq "string") {
+			$cline = "char *$variable;";
+		}
+		elsif ($type eq "byte") {
+			$cline = "char $variable;";
+		}
+		elsif ($type eq "boolean") {
+			$cline = "int $variable;";
+		}
+		elsif ($type eq "integer") {
+			$cline = "short int $variable;";
+		}
+		elsif ($type eq "long") {
+			$cline = "long int $variable;";
+		}
+		elsif ($type eq "single") {
+			$cline = "float $variable;";
+		}
+		elsif ($type eq "double") {
+			$cline = "double $variable;";
+		}
+	}
+	else {
+		$cline = "$line;";
+	}
+	return "$w$cline$comment";
+}
+
+WriteHeaders;
+WriteMain;
+

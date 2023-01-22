@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Shutdown
+dbus-send --system --print-reply --dest="org.freedesktop.ConsoleKit" "/org/freedesktop/ConsoleKit/Manager" "org.freedesktop.ConsoleKit.Manager.Stop"
+exit
+
+# Restart
+dbus-send --system --print-reply --dest="org.freedesktop.ConsoleKit" "/org/freedesktop/ConsoleKit/Manager" "org.freedesktop.ConsoleKit.Manager.Restart"
+exit
+
+# Suspend
+dbus-send --system --print-reply --dest="org.freedesktop.ConsoleKit" "/org/freedesktop/ConsoleKit/Manager" "org.freedesktop.ConsoleKit.Manager.Suspend" boolean:true
+exit
+
+# Hibernate
+dbus-send --system --print-reply --dest="org.freedesktop.ConsoleKit" "/org/freedesktop/ConsoleKit/Manager" "org.freedesktop.ConsoleKit.Manager.Hibernate" boolean:true
+exit
+
+# Hybrid Sleep
+dbus-send --system --print-reply --dest="org.freedesktop.ConsoleKit" "/org/freedesktop/ConsoleKit/Manager" "org.freedesktop.ConsoleKit.Manager.HybridSleep" boolean:true
+exit
+

@@ -1,0 +1,2 @@
+#!/bin/sh
+wine /home/bamm/Software/xb/bin/xb.exe "$@"

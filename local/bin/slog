@@ -1,0 +1,3 @@
+#!/bin/sh
+ssh -X bamm@optiplex.local
+

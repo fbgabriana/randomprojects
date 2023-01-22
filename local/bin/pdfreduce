@@ -1,0 +1,8 @@
+#!/bin/sh
+INPUTFILE="$1"
+TMPDIR=`mktemp -d`
+TMPFILE=`basename "$INPUTFILE"`
+TMPFILE="$TMPDIR/$TMPFILE"
+gs -dQUIET -dSAFER -dBATCH -dNOPAUSE -dCompatibilityLevel=1.4 -dPDFSETTINGS="/printer" -sDEVICE=pdfwrite -sOutputFile="$TMPFILE" "$INPUTFILE"
+cp "$TMPFILE" "$INPUTFILE"
+rm -rf $TMPDIR

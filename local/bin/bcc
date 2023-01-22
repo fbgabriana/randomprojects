@@ -1,0 +1,11 @@
+#!/bin/sh
+
+infile=$1
+shift
+
+cfile=/tmp/$infile.c
+
+b2c $infile > $cfile
+gcc $cfile "$@"
+rm $cfile
+

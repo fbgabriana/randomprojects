@@ -1,0 +1,11 @@
+#!/bin/sh
+
+#rm -rf $HOME/CASA
+#rm -rf $HOME/.casa
+
+#CASAHOME=$HOME/CASA
+
+#mkdir -p $CASAHOME
+#cd $CASAHOME
+/casa/casapy
+

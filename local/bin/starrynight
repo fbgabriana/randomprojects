@@ -1,0 +1,23 @@
+#!/bin/sh
+
+prefix="$HOME/.local/share/wineprefixes/starrynight"
+runpath="$prefix/dosdevices/c:/Program Files/Starry Night Pro Plus 6"
+
+for w in wine wine-stable; do
+	if [ "$(command -v $w)" ]; then
+		ver="$($w --version)"
+		if [ "$ver" \> "wine-5" ]; then
+			wine="$(command -v $w)"
+			break
+		fi
+	fi
+done
+
+if [ "$wine" ]; then
+	[ -n "$WINEPREFIX" ] && prefix="$WINEPREFIX"
+	cd "$runpath"
+	env WINEPREFIX="$prefix" $wine "starrynight.exe" "$@"
+else
+	echo "This wineprefix requires wine 5.0 or greater."
+fi
+

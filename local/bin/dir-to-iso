@@ -1,0 +1,21 @@
+#!/bin/sh
+
+if [ -e $1/boot/grub/efi.img ]; then
+	sudo xorriso -as mkisofs -no-emul-boot -boot-load-size 4 -boot-info-table -iso-level 4 -b isolinux/isolinux.bin -c isolinux/boot.cat -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -o $2 $1
+else
+	sudo xorriso -as mkisofs -no-emul-boot -boot-load-size 4 -boot-info-table -iso-level 4 -b isolinux/isolinux.bin -c isolinux/boot.cat -eltorito-alt-boot -no-emul-boot -o $2 $1
+fi
+sudo chown $USER:$USER $2
+if [ -e $1/boot/grub/efi.img ]; then
+	echo "Running isohybrid..."
+	isohybrid --uefi $2
+else
+	echo "Running isohybrid..."
+	isohybrid $2
+fi
+echo
+echo "Creating md5sum..."
+md5sum $2 > $2.md5
+cat "$2.md5"
+echo "Done."
+

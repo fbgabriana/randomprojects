@@ -1,0 +1,7 @@
+#!/bin/sh
+
+js=$(mktemp "${TMPDIR:-/tmp}/.~$exec.XXXXXX.js")
+trap "rm -f $html $err $js" INT EXIT
+jsrun "$js"
+exit 0
+

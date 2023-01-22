@@ -1,0 +1,79 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+my $regfile1 = $ARGV[0];
+my $regfile2 = $ARGV[1];
+
+my $tempfile1 = "/tmp/tempfile1";
+my $tempfile2 = "/tmp/tempfile2";
+
+sortregfile($regfile1, $tempfile1);
+sortregfile($regfile2, $tempfile2);
+
+my $header = `head -1 $tempfile1`;
+my $diff = `diff -ruN $tempfile1 $tempfile2 | grep -v "^+++" | grep -v "^-" | grep -v "^@@" | cut -c2-`;
+$diff =~ s/\\\|/\\\n  /g;
+print "$header\n$diff";
+
+
+sub sortregfile {
+
+	my $regfile = $_[0] || "";
+	my $output = $_[1] || $regfile;
+
+	my $regcontent = "";
+	if ($regfile) {
+		open FILE, "$regfile";
+		$regcontent = join "", <FILE>;
+		close FILE;
+	}
+
+	$regcontent = regsort($regcontent);
+
+	open FILE, ">$output";
+	print FILE $regcontent;
+	close FILE;
+
+}
+
+sub regsort {
+
+	my $regcontent = $_[0] || "";
+
+	$regcontent =~ s/]\n/.]\n/g;
+
+	my @entries = split /\n\n\[/, $regcontent;
+
+	my $header = shift @entries;
+
+	for my $entry (@entries) {
+		$entry =~ s/\\\n  /\\\|/g;
+		my @lines = split "\n", $entry;
+		my @values = ();
+		for my $line (@lines) {
+			if ($line =~ /^"/) {
+				push @values, $line;
+			}
+		}
+		for my $i (reverse 0..$#lines) {
+			if ( $lines[$i] =~ /^"/ ) {
+				splice(@lines, $i, 1, ());
+			}
+		}
+
+		$entry = join "\n", (@lines, sort { "\L$a" cmp "\L$b" } @values);
+#		$entry =~ s/\\\|/\\\n  /g;
+	}
+
+	@entries = sort { "\L$a" cmp "\L$b" } @entries;
+	unshift @entries, $header;
+
+	$regcontent = join "\n\n[", @entries;
+
+	$regcontent =~ s/.]\n/]\n/g;
+
+	return $regcontent;
+}
+

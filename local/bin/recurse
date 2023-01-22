@@ -1,0 +1,11 @@
+#!/bin/sh
+
+CURDIR=$(pwd);
+for DIR in $(find . -type d);
+do
+	cd "$CURDIR/$DIR";
+	echo
+	echo Running \'$1\' on \'$DIR\'...
+	$1;
+done
+

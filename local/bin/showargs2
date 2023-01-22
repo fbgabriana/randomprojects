@@ -1,0 +1,40 @@
+#!/bin/sh
+
+exec="$(basename $0)"
+ver="2"
+
+# Process command line arguments.
+optarg=
+endopts=
+for i do
+	if [ "$i" = "--" ]; then endopts=$i; continue; fi
+	if [ -z $endopts ] && echo $i | grep "^-" >/dev/null; then 
+		# Get options without arguments
+		if [ -n "$(echo $i | sed -n '/^-.*h.*/ p')" -o "$i" = "--help"    ]; then help="$i"    ; fi
+		if [ -n "$(echo $i | sed -n '/^-.*v.*/ p')" -o "$i" = "--version" ]; then version="$i" ; fi
+		if [ -n "$(echo $i | sed -n '/^-.*q.*/ p')" -o "$i" = "--quiet"   ]; then quiet="$i"   ; fi
+		if [ -n "$(echo $i | sed -n '/^-.*d.*/ p')" -o "$i" = "--debug"   ]; then debug="$i"   ; fi
+		# Get options with arguments.
+		if [ "$i" = "-i" -o "$i" = "--input-file"  ]; then optarg="input_file"  ; fi
+		if [ "$i" = "-o" -o "$i" = "--output-file" ]; then optarg="output_file" ; fi
+	else
+		# Get option arguments.
+		if [ -z $endopts ] && [ -n "$optarg" ]; then eval "$optarg=\"$i\""; optarg=; continue; fi
+		# Get non-option arguments.
+		if echo $i | grep " " >/dev/null; then
+			args="$args \"$i\""
+		else
+			args="$args $i"
+		fi
+	fi
+done
+args=$(echo "$args" | sed 's/^[[:space:]]//g')
+
+echo "help=$help"
+echo "version=$version"
+echo "quiet=$quiet"
+echo "debug=$debug"
+echo "input-file=$input_file"
+echo "output-file=$output_file"
+echo "args=$args"
+

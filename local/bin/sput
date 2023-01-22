@@ -1,0 +1,6 @@
+#!/bin/sh
+
+scp "$1" bamm@optiplex.local:/home/bamm/Desktop/
+#scp "$1" bamm@eeepc.local:/home/bamm/Desktop/
+#scp "$1" roch@eeepc.local:/home/roch/Desktop/
+

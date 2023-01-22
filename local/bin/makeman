@@ -1,0 +1,30 @@
+#!/usr/bin/perl -w
+
+use strict;
+use warnings;
+
+exit if (! @ARGV);
+
+my ($ExecName, $PrettyName) = @ARGV;
+
+my $VersionString = (split /\n/, `$ExecName --version 2>&1`)[0];
+
+my $Output = `help2man --no-discard-stderr $ExecName`;
+
+my @lines = split /\n/, $Output;
+
+open FILE, ">$ExecName.1";
+for my $line (@lines) {
+	next if $line =~ m/DO NOT MODIFY THIS FILE!/;
+	last if $line =~ m/.SH "SEE ALSO"/;
+	if ($PrettyName) {
+		if ($VersionString) {
+			if ($line =~ m/"User Commands"/) {
+				$line =~ s/\"$VersionString\"/\"$PrettyName\"/;
+			}
+		}
+	}
+	print FILE "$line\n";
+}
+close FILE;
+

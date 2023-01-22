@@ -1,0 +1,28 @@
+#!/bin/sh
+
+export COMPANYNAME="Distro Astro"
+export PRODUCTNAME="ShowParameters"
+export PRODUCTVERSION="2.0"
+export EXEPATH="/home/bamm/.local/bin/param.exe"
+export RUNPATH="~/Pictures"
+export USEABSOLUTEPATHS="1"
+
+export ARGPATTERN="[OPTION]... [FILE]..."
+export SHORTDESC="Display the command-line parameters received by a program running in Wine."
+export SWITCHES="
+      --opt1     show additional option 1
+      --opt2     show additional option 2
+      --opt3     show additional option 3
+"
+export MOREHELP="
+This is a sample project for WineLaunch. Use this file as a template for
+other WineLaunch projects.
+"
+export REPORTBUGS="bugs@distroastro.org"
+export HOMEPAGE="http://www.distroastro.org/"
+export LEGALCOPYRIGHT="Copyright (C) 2016 Bamm Gabriana."
+export LICENSEINFO="GPLv2+"
+export AUTHORNAME="Bamm Gabriana"
+
+winelauncher "$@"
+

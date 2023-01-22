@@ -1,0 +1,10 @@
+#!/bin/sh
+
+URL="/usr/share/skychart/doc/wiki_doc/en/documentation/start.html"
+TITLE="Cartes du Ciel Help"
+ICON="skychart"
+WIDTH="640"
+HEIGHT="640"
+
+browserapps "$URL" --title="$TITLE" --icon="$ICON" --width="$WIDTH" --height="$HEIGHT"
+

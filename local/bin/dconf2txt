@@ -1,0 +1,5 @@
+#!/bin/sh
+cp "$1" ~/.config/dconf/db_
+printf %s\\n "user-db:db_" > ~/db_profile
+DCONF_PROFILE=~/db_profile dconf dump / > $1.txt
+rm ~/db_profile ~/.config/dconf/db_

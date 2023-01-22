@@ -1,0 +1,8 @@
+#!/bin/sh
+
+for i do
+	filename=${i%.*}
+	echo Converting $filename...
+	convert -density 200 $filename.pdf $filename.png
+done
+

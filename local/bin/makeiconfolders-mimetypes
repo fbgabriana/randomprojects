@@ -1,0 +1,46 @@
+#!/bin/sh
+
+for px in 16 24 32 48 64 96 128 192 256 384 512
+do
+	if [ -f "$1_${px}x${px}-32.png" ]; then
+		echo "Copying $1_${px}x${px}-32.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/mimetypes
+		cp $1_${px}x${px}-32.png icons/hicolor/${px}x${px}/mimetypes/$1.png
+	elif [ -f "$1_${px}x${px}-24.png" ]; then
+		echo "Copying $1_${px}x${px}-24.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/mimetypes
+		cp $1_${px}x${px}-24.png icons/hicolor/${px}x${px}/mimetypes/$1.png
+	elif [ -f "$1_${px}x${px}-16.png" ]; then
+		echo "Copying $1_${px}x${px}-16.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/mimetypes
+		cp $1_${px}x${px}-16.png icons/hicolor/${px}x${px}/mimetypes/$1.png
+	elif [ -f "$1_${px}x${px}-8.png" ]; then
+		echo "Copying $1_${px}x${px}-8.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/mimetypes
+		cp $1_${px}x${px}-8.png icons/hicolor/${px}x${px}/mimetypes/$1.png
+	elif [ -f "$1-${px}.png" ]; then
+		echo "Copying $1-${px}.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/mimetypes
+		cp $1-${px}.png icons/hicolor/${px}x${px}/mimetypes/$1.png
+	elif [ -f "$1${px}.png" ]; then
+		echo "Copying $1${px}.png ..."
+		mkdir -p icons/hicolor/${px}x${px}/mimetypes
+		cp $1${px}.png icons/hicolor/${px}x${px}/mimetypes/$1.png
+	fi
+
+	if [ -f "$1_${px}x${px}-4.png" ]; then
+		echo "Copying $1_${px}x${px}-4.png ..."
+		mkdir -p icons/locolor/${px}x${px}/mimetypes
+		cp $1_${px}x${px}-4.png icons/locolor/${px}x${px}/mimetypes/$1.png
+	elif [ -f "$1-${px}l.png" ]; then
+		echo "Copying $1-${px}l.png ..."
+		mkdir -p icons/locolor/${px}x${px}/mimetypes
+		cp $1-${px}l.png icons/locolor/${px}x${px}/mimetypes/$1.png
+	elif [ -f "$1${px}l.png" ]; then
+		echo "Copying $1${px}l.png ..."
+		mkdir -p icons/locolor/${px}x${px}/mimetypes
+		cp $1${px}l.png icons/locolor/${px}x${px}/mimetypes/$1.png
+	fi
+
+done
+

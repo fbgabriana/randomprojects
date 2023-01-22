@@ -1,0 +1,36 @@
+#!/bin/sh
+
+HEADER="Windows Registry Editor Version 5.00"
+
+perl -pe "s/\n/|/g" "$1" > 1
+perl -pe "s/\|\|/\n/g" 1 | sort > reg1.reg
+rm 1
+
+perl -pe "s/\n/|/g" "$2" > 2
+perl -pe "s/\|\|/\n/g" 2 | sort > reg2.reg
+rm 2
+
+diff -ruN reg1.reg reg2.reg > diff
+rm reg1.reg reg2.reg
+
+grep "^+" diff | grep -v -- "+++" > plus
+grep "^-" diff | grep -v -- "---" > minus
+rm diff
+
+perl -pe "s/^\+//g" plus > plus.tmp
+perl -pe "s/^\-//g" minus > minus.tmp
+rm plus minus
+
+perl -pe "s/\n/\n\n/g" plus.tmp > plus
+perl -pe "s/\n/\n\n/g" minus.tmp > minus
+rm plus.tmp minus.tmp
+
+perl -pe "s/\|/\n/g" plus > plus.tmp
+perl -pe "s/\|/\n/g" minus > minus.tmp
+rm plus minus
+
+echo "$HEADER\n" > header.tmp
+cat header.tmp plus.tmp > plus.reg
+cat header.tmp minus.tmp > minus.reg
+rm plus.tmp minus.tmp header.tmp
+

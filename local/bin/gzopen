@@ -1,0 +1,7 @@
+#!/bin/sh
+
+filename=$(basename $@)
+tempfile=/tmp/${filename%.*}
+
+gunzip -c $filename > $tempfile
+mate-open $tempfile

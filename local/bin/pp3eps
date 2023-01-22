@@ -1,0 +1,46 @@
+#!/bin/sh
+
+script=$(basename "$0")
+basename=$(basename "$1")
+filename="${basename%.*}"
+ext="${basename##*.}"
+
+if [ ! "$1" ]; then
+	echo "$script: Required parameter missing."
+	exit 1
+fi
+
+if [ ! -e "$1" ]; then
+	echo "$script: Input script file $1 not found."
+	exit 1
+fi
+
+if [ ! "$ext" = "pp3" ]; then
+	echo "$script: Invalid extension: .$ext. Input script must have .pp3 extension."
+	exit 2
+fi
+
+rm -f "$filename.eps"
+
+pp3 $1 >/dev/null 2>&1
+
+rm -f "labeldimens.dat"
+
+rm -f "pp3temp.tex"
+rm -f "pp3temp.dat"
+rm -f "pp3temp.log"
+rm -f "pp3dump.log"
+
+rm -f "$filename.dvi"
+rm -f "$filename.tex"
+rm -f "$filename.log"
+
+rm -f "texput.log"
+
+if [ ! -e "$filename.eps" ]; then
+	echo "$script: An error occured. Run pp3 manually to see error."
+	exit 3
+fi
+
+echo "Created $filename.eps."
+

@@ -1,0 +1,11 @@
+#!/bin/sh
+echo "Warning: Executable files will lose their x attribute."
+read -p "Press any key to continue... " key;
+echo "Setting permissions...";
+pass=bammroch;
+echo $pass | sudo -S  chown www-data.www-data *
+echo $pass | sudo -S  find . -type d -exec chmod 755 {} \;
+echo $pass | sudo -S  find . -type f -exec chmod 644 {} \;
+echo $pass | sudo -S  find . -type d -exec setfacl -m u:bamm:rwx {} \;
+echo $pass | sudo -S  find . -type f -exec setfacl -m u:bamm:rw {} \;
+

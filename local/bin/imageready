@@ -1,0 +1,57 @@
+#!/bin/sh
+# Launcher for Adobe ImageReady CS2
+
+export COMPANYNAME="Adobe®"
+export PRODUCTNAME="ImageReady®"
+export PRODUCTVERSION="9.0"
+export NICEPRODUCTVERSION="Adobe® ImageReady® CS2 (Version 9.0)"
+export EXEPATH="C:\Program Files\Adobe\Adobe Photoshop CS2\ImageReady.exe"
+export RUNPATH=""
+export USEABSOLUTEPATHS=""
+export PRERUN=""
+
+export ARGPATTERN="[FILE]"
+export SHORTDESC="Adobe® ImageReady® is a raster graphics editor developed and published by Adobe
+Systems Incorporated."
+export SWITCHES=""
+export MOREHELP="
+Adobe ImageReady CS2 software leads the family of Adobe digital imaging products,
+including Adobe ImageReady Elements 3.0 and Adobe ImageReady Album 2.0 software.
+
+ImageReady CS2 is also part of the Adobe Creative Suite, a complete design
+solution that combines Adobe Illustrator® CS2, Adobe InDesign® CS2 and
+Version Cue® CS2 software, as well as Adobe GoLive® CS2 and Adobe Acrobat® 7.0
+Professional software in the Premium Edition."
+export REPORTBUGS="https://www.adobe.com/products/wishform.html"
+export HOMEPAGE="http://www.adobe.com/"
+export LEGALCOPYRIGHT="© 1990-2005 Adobe Systems Incorporated. All rights reserved."
+export LICENSEINFO="Adobe, the Adobe logo and ImageReady are either registered trademarks or
+trademarks of Adobe Systems Incorporated in the United States and/or
+other countries."
+export AUTHORNAME="Adobe Systems Incorporated"
+
+export WINEPREFIX="$HOME/.local/share/wineprefixes/photoshop"
+export WINEPATH="/opt/wine-stable/bin/wine"
+
+if [ -z "$WINEPREFIX" ]; then export WINEPREFIX="$HOME/.wine"; fi
+if [ -z "$WINEPATH" ]; then export WINEPATH="$(which wine)"; fi
+
+if [ `which winelauncher` ]; then
+	# winelauncher formats help and version properly (for help2man),
+	# replaces Unix-style switches to Windows-style parameters, and
+	# converts Unix paths to paths recognizable by Wine.
+	winelauncher "$@"
+else
+	if [ "$*" = "--help" ]; then
+		echo "Usage: $(basename "$0") $ARGPATTERN"
+		echo "$SHORTDESC"
+		echo "$MOREHELP"
+	elif [ "$*" = "--version" ]; then
+		echo "$NICEPRODUCTVERSION"
+		echo "$LEGALCOPYRIGHT"
+		echo "$LICENSEINFO"
+	else
+		$WINEPATH "$EXEPATH" "$@"
+	fi
+fi
+

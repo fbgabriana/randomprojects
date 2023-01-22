@@ -1,0 +1,4 @@
+#!/bin/sh
+
+if [ -z "$1" ]; then mint-fortune; else $1; fi
+

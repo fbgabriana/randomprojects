@@ -1,0 +1,44 @@
+#!/bin/sh
+CORES="00 01 02 03"
+
+if [ -n "$1" ]; then
+	echo "The '$0' command doesn't take command line arguments. Feed commands to run to stdin."
+	exit 2
+fi
+
+TMP=`tempfile`
+BATCHID=`echo "$TMP" | md5sum | head -c 16`
+PROGRESS_FILE="${TMP}_progress"
+
+# Calculate tasks per processing unit
+cat /dev/stdin > "$TMP"
+LINES=`wc -l < "$TMP"`
+SL=`echo "(($LINES+5)/4)" | bc`
+
+cat "$TMP" | sed "s@^@(echo . >> '$PROGRESS_FILE'); @"  | split -l $SL -d - "${TMP}_proc"
+
+# Split processes into 'screen's
+echo "Scheduling $LINES commands, about $SL per processing unit..."
+for x in $CORES; do
+	echo "...core $x"
+	screen -d -m -S "${BATCHID}_proc$x" bash "${TMP}_proc$x"
+	sleep 1
+done
+
+# Wait for screens to end
+echo "Processes started. Waiting for completion..."
+while (screen -ls | grep -q "$BATCHID"); do
+	DONE=`wc -l < "$PROGRESS_FILE"`
+	PERC=`echo " $DONE * 100 / $LINES" | bc`
+	echo "  $PERC%"
+	sleep 2
+done
+
+# Clean up temporaries
+rm -f "$TMP"
+for x in $CORES; do
+	rm -f "${TMP}_proc$x"
+done
+
+echo "All done."
+

@@ -1,0 +1,7 @@
+#!/bin/sh
+for pic in *.bmp
+do
+        echo "converting $pic"
+        convert $pic $(basename $pic .bmp).png
+done
+echo "Done"

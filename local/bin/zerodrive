@@ -1,0 +1,3 @@
+#!/bin/sh
+sudo dd if=/dev/zero of=/dev/sdb oflag=direct bs=1048576
+sudo dd if=/dev/zero of=/dev/sdb seek=14557184

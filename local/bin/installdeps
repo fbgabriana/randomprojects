@@ -1,0 +1,5 @@
+#!/usr/bin/perl
+
+my $deps = join " ", grep {!s/^\(|\)$//} split / /, join " ", @ARGV;
+print "sudo apt-get install $deps\n";
+system "sudo apt-get install $deps";

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+FIREFOX_VERSION=`grep -Po  "\d{2}\.\d+" /usr/lib/firefox/platform.ini`
+ARCH=`uname -p`
+XURL=https://ftp.mozilla.org/pub/mozilla.org/xulrunner/releases/$FIREFOX_VERSION/runtimes/xulrunner-$FIREFOX_VERSION.en-US.linux-$ARCH.tar.bz2
+cd /opt
+sudo sh -c "wget -O- $XURL | tar -xj"
+sudo ln -s /opt/xulrunner/xulrunner /usr/bin/xulrunner
+sudo ln -s /opt/xulrunner/xpcshell /usr/bin/xpcshell 

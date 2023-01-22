@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+
+$xinput = `xinput`;
+
+@lines = split /\n/, $xinput;
+
+for $line (@lines) {
+	chomp $line;
+	if ($line =~ /HID 4752:4965/) {
+		@cols = split /\s+/, $line;
+		$id = (split /=/, $cols[4])[1];
+		print "Slowing Down Mouse for id=$id:\n";
+		print "  Setting Device Accel Constant Deceleration to 5...\n";
+		`xinput --set-prop $id "Device Accel Constant Deceleration" 5`;
+		print "  Setting Device Accel Velocity Scaling to 1...\n";
+		`xinput --set-prop $id "Device Accel Velocity Scaling" 1`;
+	}
+}
+

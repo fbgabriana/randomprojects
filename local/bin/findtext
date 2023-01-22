@@ -1,0 +1,2 @@
+#!/bin/sh
+find . -type f -exec grep --binary-files=without-match --color -H "$@" {} \; 2>/dev/null

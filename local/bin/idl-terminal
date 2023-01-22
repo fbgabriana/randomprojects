@@ -1,0 +1,161 @@
+#!/bin/sh
+
+################################################################################
+#                                                                              #
+# IDL Terminal                                                                 #
+# Version 4.0                                                                  #
+#                                                                              #
+# Copyright (C) 2012-2018 Bamm Gabriana.                                       #
+#                                                                              #
+# This is part of Distro Astro.                                                #
+#                                                                              #
+# This program is free software; you can redistribute it and/or modify         #
+# it under the terms of the GNU General Public License as published by         #
+# the Free Software Foundation; either version 2 of the License, or            #
+# (at your option) any later version.                                          #
+#                                                                              #
+# This program is distributed in the hope that it will be useful,              #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of               #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                #
+# GNU General Public License for more details.                                 #
+#                                                                              #
+# You should have received a copy of the GNU General Public License            #
+# along with this program. If not, see <http://www.gnu.org/licenses/>          #
+#                                                                              #
+# On Debian systems, the complete text of the GNU General Public License       #
+# version 2 and 3 can be found in                                              #
+# "/usr/share/common-licenses/GPL-2" and "/usr/share/common-licenses/GPL-3".   #
+#                                                                              #
+################################################################################
+
+name="IDL Terminal"
+copy="Copyright (C) 2012-2018 Bamm Gabriana."
+exec="$(basename $0)"
+ver="4.0"
+
+command="idl"
+term="sakura"
+shell="csh"
+title="IDL Terminal"
+geometry="90x50"
+idlworkspace="$(getent passwd $USER|cut -d: -f6)/IDLWorkspace82"
+monospace_font_name=$(gsettings get org.mate.interface monospace-font-name)
+font=$(echo $monospace_font_name | sed "s/'//g" | sed "s/\w*$//")
+size=$(echo $monospace_font_name | sed "s/'//g" | awk '{print $NF}')
+
+# Parse command line arguments.
+unset optarg
+unset endopts
+for i do
+	shift
+	if [ "$i" = "--" ]; then endopts=$i; continue; fi
+	if [ -z "$endopts" ] && [ "$optarg" ]; then eval "$optarg=\"$i\""; unset optarg; continue; fi
+	if [ -z "$endopts" ] && [ "${i#-}" != "$i" ]; then 
+		if [ "${i#--}" = "$i" ]; then
+		# Get short options
+		if echo "$i" | grep -q "?"; then help="$i"    ; fi
+		if echo "$i" | grep -q "V"; then version="$i" ; fi
+		if echo "$i" | grep -q "v"; then verbose="$i" ; fi
+		if echo "$i" | grep -q "d"; then debug="$i"   ; fi
+		if echo "$i" | grep -q "q"; then quiet="$i"   ; fi
+		else
+		# Get long options
+		if [ "$i" = "--help"     ]; then help="$i"    ; fi
+		if [ "$i" = "--version"  ]; then version="$i" ; fi
+		if [ "$i" = "--verbose"  ]; then verbose="$i" ; fi
+		if [ "$i" = "--debug"    ]; then debug="$i"   ; fi
+		if [ "$i" = "--quiet"    ]; then quiet="$i"   ; fi
+		fi
+		# Get options with arguments (allow equal sign)
+		if echo "$i" | grep -q "="; then v=$(echo $i | cut -d= -f2); i=$(echo $i | cut -d= -f1); fi
+		if [ "$i" = "-e" -o "$i" = "--command" ]; then optarg="command" ; fi
+		if [ "$i" = "-t" -o "$i" = "--term" ]; then optarg="term" ; fi
+		if [ "$i" = "-s" -o "$i" = "--shell" ]; then optarg="shell" ; fi
+		if [ "$i" = "-T" -o "$i" = "--title"  ]; then optarg="title"  ; fi
+		if [ "$i" = "-G" -o "$i" = "--geometry" ]; then optarg="geometry" ; fi
+		if [ "$i" = "-S" -o "$i" = "--size" ]; then optarg="size" ; fi
+		if [ -n "${v+x}" ]; then if [ -n "$optarg" ]; then eval "$optarg=\"$v\""; unset optarg; fi; unset v; fi
+	else
+		# Get non-option arguments.
+		set -- "$@" "$i"
+	fi
+done
+
+main() {
+
+	case "$shell" in
+		"csh")   ;;
+		"tcsh")  ;;
+		"bash")  ;;
+		"ksh")   ;;
+		"zsh")   ;;
+		"fish")  ;;
+		"sh")    ;;
+		*)	echo "$exec: Invalid command shell - $shell." 1>&2
+			echo "Recommended choices are: csh, tcsh" 1>&2
+			exit 1 ;;
+	esac
+	if [ "$(which $shell)" = "" ]; then
+		echo "$exec: The command shell \`$term' is not found." 1>&2
+		exit 1
+	fi
+	shell=$(which $shell)
+
+	if [ "$geometry" ]; then
+		# Center window on screen
+		screen=$(xdpyinfo | grep dimensions | awk '{print $2}')
+		left=$(echo "(${screen%x*} - 736) / 2" | bc)
+		top=$(echo "(${screen##*x} - 702) / 2" | bc)
+		width=${geometry%x*}
+		height=${geometry##*x}
+		geometry="${width}x${height}+${left}+${top}"
+	fi
+
+	if xset q >/dev/null 2>&1; then
+
+		if command -v $term > /dev/null; then
+			if ! wmctrl -l | grep -q "$title"; then
+				mkdir -p "$idlworkspace"
+				$(which $term) -f "$font $size" -c $width -r $height --geometry="$geometry" -d $idlworkspace -x $command -t "$title" --config-file="idl.conf" &
+			fi
+		fi
+
+	else
+		echo "This command requires an X display. Run 'iraf-start -$command' instead."
+	fi
+
+}
+
+showhelp() {
+	echo "Usage: $exec [OPTION]... [ARGS]..."
+	echo ""
+	echo "Start a PyRAF terminal session."
+	echo ""
+	echo "  -c, --command=[COMMAND]    set IRAF CL interpreter to COMMAND (default $command)"
+	echo "  -g, --graphics=[GRAPHICS]  set graphics server to GRAPHICS (default $graphics)"
+	echo "  -t, --term=[TERM]          set terminal to TERM (default $term)"
+	echo "  -s, --shell=[SHELL]        set command shell to SHELL (default $shell)"
+	echo "  -T, --title=[TITLE]        set window title to display TITLE"
+	echo "  -G, --geometry=[GEOMETRY]  set geometry to GEOMETRY (default $geometry)"
+	echo "  -S, --size=[SIZE]          set X11 font size to SIZE (default $size)"
+	echo "      --help     display this help and exit"
+	echo "      --version  output version information and exit"
+	echo ""
+	echo "Report $exec bugs to Bamm Gabriana <bamm@distroastro.org>"
+	echo "Distro Astro home page: <http://www.distroastro.org/>"
+}
+
+showversion() {
+	echo "$exec $ver"
+	echo "$copy"
+	echo "License GPLv2+: GPL version 2 or later <http://gnu.org/licenses/gpl-2.0.html>."
+	echo "This is free software: you are free to change and redistribute it."
+	echo "There is NO WARRANTY, to the extent permitted by law."
+	echo ""
+	echo "Written by Bamm Gabriana."
+}
+
+[ -n "$help" ] && showhelp && exit
+[ -n "$version" ] && showversion && exit
+main
+

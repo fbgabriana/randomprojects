@@ -1,0 +1,3 @@
+#!/bin/sh
+
+browserapps "/usr/share/ubiquity-slideshow/slides/index.html" --title="Welcome to Distro Astro" --icon="distroastro" --width="752" --height="442"

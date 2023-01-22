@@ -1,0 +1,10 @@
+#!/bin/sh
+
+tempdir=$(mktemp -d);
+for PNG in $(ls *.png)
+do
+	gm convert -modulate 100,200 $PNG $tempdir/$PNG
+	mv $tempdir/$PNG .
+done
+rmdir $tempdir;
+

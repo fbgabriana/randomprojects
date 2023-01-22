@@ -1,0 +1,275 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+
+use constant MAXINT => ~0;
+
+sub main {
+	my ($iconname, $size, $scale, $theme) = @ARGV;
+	# Note: $iconname is a single icon name or a colon-separated string of icon names,
+	#  in order of preference before using an icon from an inherited theme. From this
+	#  list the best matching icon file is found.
+
+	$size ||= MAXINT >> 1;	# If no size is given, give the largest available.
+	$scale ||= 1;         	# If no scale is given, assume it unscaled.
+                           	# If no theme is given, uses the current theme.
+
+	my $filename;
+
+	if ($iconname =~ /:/) {
+		# Use this for a colon-separated list of icon names.
+		$filename = &FindBestIcon($iconname, $size, $scale, $theme);
+	}
+	else {
+		# Use this for a single icon name.
+		$filename = &FindIcon($iconname, $size, $scale, $theme);
+	}
+
+	print "$filename\n" if $filename;
+}
+
+# Based on the exact algorithm (in pseudocode) for looking up an icon in a theme, in
+# https://specifications.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html
+
+sub FindIcon {
+	my ($iconname, $size, $scale, $theme) = @_;
+	my $filename;
+
+	$filename = &FindIconHelper($iconname, $size, $scale, $theme || &UserSelectedTheme);
+	return $filename if ($filename);
+
+	$filename = &FindIconHelper($iconname, $size, $scale, "hicolor");
+	return $filename if ($filename);
+
+	return &LookupFallbackIcon($iconname);
+}
+
+sub FindIconHelper {
+	my ($iconname, $size, $scale, $theme) = @_;
+	my $filename;	my @index = &ReadIndex($theme);
+
+	$filename = &LookupIcon($iconname, $size, $scale, $theme, @index);
+	return $filename if ($filename);
+
+	my @parents = &Parents($theme, @index);
+	for my $parent (@parents) {
+		$filename = FindIconHelper($iconname, $size, $scale, $parent);
+		return "$filename" if ($filename);
+	}
+	return;
+}
+
+# With the following helper functions:
+
+sub LookupIcon {
+	my ($iconname, $size, $scale, $theme, @index) = @_;
+	foreach my $subdir (&ThemeSubdirList($theme, @index)) {
+		foreach my $directory (&BaseNameList) {
+			for my $ext ("png", "svg", "xpm") {
+				if (&DirectoryMatchesSize($subdir, $size, $scale, @index)) {
+					my $filename = "$directory/$theme/$subdir/$iconname.$ext";
+					return $filename if (-e $filename);
+				}
+			}
+		}
+	}
+	my $minimal_size = MAXINT;
+	my $closest_filename = "";
+	foreach my $subdir (&ThemeSubdirList($theme, @index)) {
+		foreach my $directory (&BaseNameList) {
+			for my $ext ("png", "svg", "xpm") {
+				my $filename = "$directory/$theme/$subdir/$iconname.$ext";
+				if (-e $filename && &DirectorySizeDistance($subdir, $size, $scale, @index) < $minimal_size) {
+					$closest_filename = $filename;
+					$minimal_size = &DirectorySizeDistance($subdir, $size, $scale, @index);
+				}
+			}
+		}
+	}
+	if ($closest_filename) {
+		return $closest_filename;
+	}
+	return;
+}
+
+sub LookupFallbackIcon {
+	my ($iconname) = @_;
+	foreach my $directory (&BaseNameList) {
+		for my $ext ("png", "svg", "xpm") {
+			my $filename = "$directory/$iconname.$ext";
+			return $filename if (-e $filename);
+		}
+	}
+	return;
+}
+
+sub DirectoryMatchesSize {
+	my ($subdir, $size, $scale, @index) = @_;
+	my ($Size, $Scale, $Context, $Type, $MaxSize, $MinSize, $Threshold) = &ReadTypeAndSizeDataFromSubdir($subdir, @index);
+	if ($Scale != $scale) {
+		return 0;
+	}
+	if ($Type eq "Fixed") {
+		return $Size == $size;
+	}
+	if ($Type eq "Scalable") {
+		return $MinSize <= $size && $size <= $MaxSize;
+	}
+	if ($Type eq "Threshold") {
+		return $Size - $Threshold <= $size && $size <= $Size + $Threshold;
+	}
+}
+
+sub DirectorySizeDistance {
+	my ($subdir, $size, $scale, @index) = @_;
+	my ($Size, $Scale, $Context, $Type, $MaxSize, $MinSize, $Threshold) = &ReadTypeAndSizeDataFromSubdir($subdir, @index);
+	if ($Type eq "Fixed") {
+		return abs($Size*$Scale - $size*$scale);
+	}
+	if ($Type eq "Scalable") {
+		return $MinSize*$Scale - $size*$scale if $size*$scale < $MinSize*$Scale;
+		return $size*$scale - $MaxSize*$Scale if $size*$scale > $MaxSize*$Scale;
+		return 0;
+	}
+	if ($Type eq "Threshold") {
+		return $MinSize*$Scale - $size*$scale if $size*$scale < ($Size - $Threshold)*$Scale;
+		return $size*$scale - $MaxSize*$Scale if $size*$scale > ($Size + $Threshold)*$Scale;
+		return 0;
+	}
+}
+
+# In some cases you don't always want to fall back to an icon in an inherited theme.
+# For instance, sometimes you look for a set of icons, prefering any of them before
+# using an icon from an inherited theme.
+
+sub FindBestIcon {
+	my ($iconlist, $size, $scale, $theme) = @_;
+	my $filename;
+
+	$filename = &FindBestIconHelper($iconlist, $size, $scale, $theme || &UserSelectedTheme);
+	return $filename if ($filename);
+
+	$filename = &FindBestIconHelper($iconlist, $size, $scale, "hicolor");
+	return $filename if ($filename);
+
+	for my $iconname (split /:/, $iconlist) {
+		$filename = &LookupFallbackIcon($iconname);
+		return $filename if ($filename);
+	}
+}
+
+sub FindBestIconHelper {
+	my ($iconlist, $size, $scale, $theme) = @_;
+	my $filename;	my @index = &ReadIndex($theme);
+
+	for my $iconname (split /:/, $iconlist) {
+		$filename = &LookupIcon($iconname, $size, $scale, $theme, @index);
+		return $filename if ($filename);
+	}
+
+	my @parents = &Parents($theme, @index);
+	for my $parent (@parents) {
+		$filename = FindBestIconHelper($iconlist, $size, $scale, $parent);
+		return "$filename" if ($filename);
+	}
+	return;
+}
+
+# The following support functions perform the tasks required by the above algorithm.
+
+sub ReadTypeAndSizeDataFromSubdir {
+	my ($subdir, @index) = @_;
+	my ($Size, $Scale, $Context, $Type, $MaxSize, $MinSize, $Threshold);
+	my $found = 0;
+	for my $line (@index) {
+		if ($found) {
+			chomp $line;
+			$Size = (split /=/, $line)[1] if $line =~ /^Size=/;
+			$Scale = (split /=/, $line)[1] if $line =~ /^Scale=/;
+			$Context = (split /=/, $line)[1] if $line =~ /^Context=/;
+			$Type = (split /=/, $line)[1] if $line =~ /^Type=/;
+			$MaxSize = (split /=/, $line)[1] if $line =~ /^MaxSize=/;
+			$MinSize = (split /=/, $line)[1] if $line =~ /^MinSize=/;
+			$Threshold = (split /=/, $line)[1] if $line =~ /^Threshold=/;
+			last if $line =~ /\[.+\]/;
+		}
+		else {
+			$found = 1 if $line =~ /\[$subdir\]/;
+		}
+	}
+	$Size ||= 32;
+	$Scale ||= 1;
+	$Context ||= "";
+	$Type ||= "Threshold";
+	$MaxSize ||= $Size;
+	$MinSize ||= $Size;
+	$Threshold ||= 2;
+	return ($Size, $Scale, $Context, $Type, $MaxSize, $MinSize, $Threshold);
+}
+
+sub Parents {
+	my ($theme, @index) = @_;
+	my @parents;
+	for my $line (@index) {
+		if ($line =~ /^Inherits=/) {
+			chomp $line;
+			@parents = split /,/, (split /=/, $line)[1];
+			last;
+		}
+	}
+	return @parents;
+}
+
+sub ThemeSubdirList {
+	my ($theme, @index) = @_;
+	my @themesubdirlist;
+	for my $line (@index) {
+		if ($line =~ /^Directories=/) {
+			chomp $line;
+			@themesubdirlist = split /,/, (split /=/, $line)[1];
+			last;
+		}
+	}
+	return @themesubdirlist;
+}
+
+sub ReadIndex {
+	my ($theme) = @_;
+	foreach my $directory (&BaseNameList) {
+		my $filename = "$directory/$theme/index.theme";
+		if (-r $filename) {
+			open (FILE, "$filename");
+			my @lines = <FILE>;
+			close FILE;
+			return @lines;
+		}
+	}
+	return;
+}
+
+sub UserSelectedTheme {
+	my $theme = qx(gsettings get org.mate.interface gtk-theme);
+	chomp $theme; $theme =~ s/^'|'$//g;
+	return $theme;
+}
+
+sub BaseNameList {
+	my $HOME = $ENV{'HOME'};
+	my $XDG_DATA_DIRS = $ENV{'XDG_DATA_DIRS'} || "/usr/local/share:/usr/share";
+	my $data_dirs = "$HOME/.local/share:$XDG_DATA_DIRS";
+	my @data_dirs_list = map { $_ =~ s/\/$//; $_ } split(/:/, $data_dirs);
+	my @basenamelist = map { "$_/icons" } &Unique(@data_dirs_list);
+	return "$HOME/.icons", @basenamelist, "/usr/share/pixmaps";
+}
+
+sub Unique {
+	my %found; grep ! $found{$_}++, @_;
+}
+
+sub usage {
+	(my $script = $0) =~s/.*\///;
+	print "Usage: $script ICONNAME [ICONSIZE] [ICONSCALE] [ICONTHEME]\n";
+}
+
+@ARGV ? &main : &usage;

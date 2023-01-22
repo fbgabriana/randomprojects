@@ -1,0 +1,33 @@
+#!/bin/sh
+
+exec="$(basename $0)"
+ver="1"
+
+# Process command line arguments.
+_=
+for i do
+	if [ $_ ]; then eval "$_=\"$i\""; _=
+	# Get options.
+	elif [ "$i" = "-h" -o "$i" = "--help"     ]; then	help="$i"
+	elif [ "$i" = "-V" -o "$i" = "--version"  ]; then	version="$i"
+	elif [ "$i" = "-q" -o "$i" = "--quiet"    ]; then	quiet="$i"
+	elif [ "$i" = "-d" -o "$i" = "--debug"    ]; then	debug="$i"
+	elif [ "$i" = "-t" -o "$i" = "--test"     ]; then	_="test"
+	elif [ "$i" = "-a" -o "$i" = "--all"      ]; then	all="$i"
+	# Get non-option arguments.
+	elif echo $i | grep " " >/dev/null; then
+		args="$args \"$i\""
+	else
+		args="$args $i"
+	fi
+done
+args=$(echo $args | sed 's/^[[:space:]]//g'); _=$0
+
+echo "quiet=$quiet"
+echo "debug=$debug"
+echo "help=$help"
+echo "version=$version"
+echo "test=$test"
+echo "all=$all"
+echo "args=$args"
+

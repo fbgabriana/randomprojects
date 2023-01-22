@@ -1,0 +1,5 @@
+#!/bin/sh
+if [ $1 ]; then
+	gpg --export-options export-minimal --export $1 | gpg --list-packets | grep -A 2 signature | grep 'digest algo'
+fi
+

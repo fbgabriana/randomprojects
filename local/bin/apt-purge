@@ -1,0 +1,2 @@
+#!/bin/sh
+sudo dpkg -P $(dpkg -l | awk '/^rc/ { print($2) }') 2>/dev/null

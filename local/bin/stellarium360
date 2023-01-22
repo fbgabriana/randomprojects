@@ -1,0 +1,3 @@
+#!/bin/sh
+cd /home/bamm/Projects/stellarium360/stellarium360-15.1.24/src
+./stellarium360

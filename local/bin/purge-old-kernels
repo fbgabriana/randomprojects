@@ -1,0 +1,8 @@
+#!/bin/sh
+old_kernels=$(old-kernels)
+if [ "$old_kernels" ]; then
+	sudo apt-get purge --autoremove $old_kernels
+	if command -v update-grub >/dev/null; then
+		sudo update-grub
+	fi
+fi

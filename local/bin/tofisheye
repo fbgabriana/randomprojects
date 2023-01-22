@@ -1,0 +1,33 @@
+#!/bin/sh
+
+if [ $# -le 1 ]; then
+	echo "Usage: $(basename $0) inputfile outputfile"
+	exit
+fi
+
+# User may change this
+outerfov=180	# Field of view of the resulting image, typically 180
+innerfov=120	# Field of view of the input image.
+
+# Temporary file
+tempfile=/tmp/.tmp$(printf "%05d" $$)$3~$(basename $2)
+
+# Create the tmp file
+convert $1 +repage $tempfile
+
+# Calculations
+height=$(identify $tempfile | awk '{print $3}' | awk -F 'x' '{print $2}')
+radius=$(echo "scale=1; $height/2" | bc)
+middle=$(echo "scale=1; ($height-1)/2" | bc)
+ofoc=$(convert xc: -format "%[fx:($outerfov*pi)/($height*180)]" info:)
+ifoc=$(convert xc: -format "%[fx:$height/(2*tan($innerfov*pi/360))]" info:)
+
+# Conversion
+convert $tempfile -gravity center -crop ${height}x${height}+0+0 +repage $tempfile
+convert $tempfile -matte -channel RGBA -virtual-pixel none -background black -monitor -fx "xd=i-$middle; yd=j-$middle; rd=hypot(xd,yd); phiang=$ofoc*rd; rr=$ifoc*tan(phiang); xs=(rd?rr/rd:0)*xd+$middle; ys=(rd?rr/rd:0)*yd+$middle; (rd>$radius)?none:u.p{xs,ys}" $tempfile
+convert $tempfile -trim +repage $tempfile
+convert $tempfile -resize ${height}x${height} $tempfile
+convert $tempfile \( +clone -threshold -1 -negate -fill white -draw "circle $middle,$middle $middle,0" \) -alpha Off -compose copy_opacity -composite $tempfile
+convert $tempfile -flatten $tempfile
+mv $tempfile $2
+

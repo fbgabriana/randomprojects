@@ -1,0 +1,25 @@
+#!/bin/bash
+
+if [ "$(id -u -n)" == "iraf" ]; then
+	IRAFHOME="/iraf/iraf/local";
+else
+	IRAFHOME="$HOME/IRAF";
+fi
+
+mkdir -p $IRAFHOME;
+pushd "$IRAFHOME" > /dev/null
+
+if [ ! -f "login.cl" ]; then
+	echo xgterm | mkiraf;
+fi
+
+if [ ! `pidof ds9` ]; then
+	ds9 &
+fi
+
+if [ ! `pidof xgterm` ]; then
+	xgterm -sb -geometry "80x40" -title "IRAF Terminal - PyRAF" -e "pyraf" &
+fi
+
+popd > /dev/null
+

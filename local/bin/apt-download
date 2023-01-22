@@ -1,0 +1,12 @@
+#! /bin/bash
+
+PACKAGE=$1
+
+FILE=`apt-cache show $PACKAGE | grep "Filename:" | cut -f 2 -d " "`
+REPO=`apt-cache policy $PACKAGE | grep "500" | cut -f 10 -d " "`
+
+if [ $FILE ]
+then
+	wget $REPO$FILE
+fi
+

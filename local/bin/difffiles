@@ -1,0 +1,12 @@
+#!/bin/sh
+
+diff -ruN "$1" "$2" > diff
+
+grep "^+" diff | grep -v -- "+++" > plus
+grep "^-" diff | grep -v -- "---" > minus
+rm diff
+
+perl -pe "s/^\+//g" plus > plus.list
+perl -pe "s/^\-//g" minus > minus.list
+rm plus minus
+

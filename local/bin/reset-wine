@@ -1,0 +1,7 @@
+#!/bin/sh
+
+rm -rf  ~/.wine-prev
+mv ~/.wine ~/.wine-prev 2> /dev/null
+cp -r /etc/skel/.wine ~
+wineboot
+

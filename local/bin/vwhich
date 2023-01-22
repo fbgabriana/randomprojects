@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo `which "$1"`;
+gedit `which "$1"` &

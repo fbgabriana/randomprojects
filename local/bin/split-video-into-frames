@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ -n "$1" ] && [ -f "$1" ]; then
+	filename=$1
+	framesdir=$filename-frames
+	mkdir -p $framesdir
+	avconv -i $filename $framesdir/frame-%05d.png
+fi
+

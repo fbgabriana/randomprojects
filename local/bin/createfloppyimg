@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# $1 = Source folder
+# $2 = Name of Image
+
+tempfolder=/tmp/floppy.tmp
+
+sudo true
+mkfs.msdos -C $2 1440 > /dev/null
+mkdir -p $tempfolder
+sudo mount -o loop,umask=0 $2 $tempfolder
+cp -r $1/* $tempfolder
+sleep 1
+sudo umount $tempfolder
+sleep 1
+rm -r $tempfolder 2> /dev/null
+

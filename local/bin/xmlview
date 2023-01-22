@@ -1,0 +1,5 @@
+#!/bin/sh
+tmpfile="~xmlview.xml"
+xmllint --format "$1" | highlight --syntax=xml --out-format=xterm256 > "$tmpfile"
+pluma "$tmpfile"
+

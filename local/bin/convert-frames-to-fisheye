@@ -1,0 +1,16 @@
+#!/bin/sh
+
+framesdir=../fisheye-frames
+
+mkdir -p $framesdir
+for i in frame-*.png; do
+	if [ ! -f $framesdir/$i ]; then
+		if [ ! -f /tmp/.tmp*~fisheye-$i ]; then
+			echo "$(echo "scale=2; $(ls ../fisheye-frames | wc -l) * 100 / $(ls | wc -l)" | bc)% complete. "
+			tofisheye $i fisheye-$i ${PWD##*/}
+			cp fisheye-$i $framesdir/$i
+			rm fisheye-$i
+		fi
+	fi
+done
+

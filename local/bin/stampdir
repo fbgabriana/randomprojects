@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ $1 ]; then
+	find . -type d -exec touch -h -t ${1} {} \;
+else
+	TODAY=`date +'%Y%m%d'`;
+	find . -type d -exec touch -h -t ${TODAY}0000.00 {} \;
+fi
+
