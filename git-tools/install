@@ -1,5 +1,6 @@
 #!/bin/sh
 cd "$(dirname $0)"
 dest="$HOME/.local/bin/"
+mkdir -p "$dest"
 cp git-* "$dest"
 
