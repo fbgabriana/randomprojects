@@ -29,8 +29,8 @@ from datetime import datetime
 #=== Edit the following values according to your requirements ===#
 
 # Enter the start and final dates to calculate, in YYYY-MM-DD format
-start_date = "2022-01-01"
-final_date = "2022-12-31"
+start_date = "2023-01-01"
+final_date = "2023-12-31"
 
 # Enter the latitude and longitude to use, in degrees including decimals
 lat =  14.60
