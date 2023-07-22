@@ -3,8 +3,7 @@
 message="$@"
 
 if [ $DISPLAY ] && xset q > /dev/null 2>&1; then
-	zenity --no-wrap --info --text="$message" --title="$title" 2>/dev/null
+	zenity --no-wrap --info --text="$message" --title="$title" --ellipsize 2>/dev/null
 else
 	echo $message
 fi
-

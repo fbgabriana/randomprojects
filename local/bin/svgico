@@ -1,0 +1,269 @@
+#!/bin/sh
+
+################################################################################
+#                                                                              #
+# SVG to ICO converter                                                         #
+# Version 1.0                                                                  #
+# Convert SVG to ICO                                                           #
+#                                                                              #
+# Copyright (C) 2023 Bamm Gabriana.                                            #
+#                                                                              #
+# This program is free software; you can redistribute it and/or modify         #
+# it under the terms of the GNU General Public License as published by         #
+# the Free Software Foundation; either version 2 of the License, or            #
+# (at your option) any later version.                                          #
+#                                                                              #
+# This program is distributed in the hope that it will be useful,              #
+# but WITHOUT ANY WARRANTY; without even the implied warranty of               #
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                #
+# GNU General Public License for more details.                                 #
+#                                                                              #
+# You should have received a copy of the GNU General Public License            #
+# along with this program. If not, see <http://www.gnu.org/licenses/>          #
+#                                                                              #
+# On Debian systems, the complete text of the GNU General Public License       #
+# version 2 and 3 can be found in                                              #
+# "/usr/share/common-licenses/GPL-2" and "/usr/share/common-licenses/GPL-3".   #
+#                                                                              #
+################################################################################
+
+#
+# requires rsvg-convert, icotool, and imagemagick convert
+#
+
+name="SVG to ICO converter"
+copy="Copyright (C) 2023 Bamm Gabriana."
+exec="$(basename $0)"
+ver="1.0"
+
+ico_style="Win11"
+
+# Parse command line arguments.
+unset IFS
+unset optarg
+unset endopts
+for i do
+	shift
+	if [ "$i" = "--" ]; then endopts=$i; continue; fi
+	if [ -z "$endopts" ] && [ "$optarg" ]; then eval "$optarg=\"$i\""; unset optarg; continue; fi
+	if [ -z "$endopts" ] && [ "${i#-}" != "$i" ]; then 
+		if [ "${i#--}" = "$i" ]; then
+		# Get short options
+		if echo "$i" | grep -q "?"; then help="$i"    ; fi
+		if echo "$i" | grep -q "V"; then version="$i" ; fi
+		if echo "$i" | grep -q "v"; then verbose="$i" ; fi
+		if echo "$i" | grep -q "d"; then debug="$i"   ; fi
+		if echo "$i" | grep -q "q"; then quiet="$i"   ; fi
+		else
+		# Get long options
+		if [ "$i" = "--help"     ]; then help="$i"    ; fi
+		if [ "$i" = "--version"  ]; then version="$i" ; fi
+		if [ "$i" = "--verbose"  ]; then verbose="$i" ; fi
+		if [ "$i" = "--debug"    ]; then debug="$i"   ; fi
+		if [ "$i" = "--quiet"    ]; then quiet="$i"   ; fi
+		fi
+		# Get options with arguments (allow equal sign)
+		if echo "$i" | grep -q "="; then v=$(echo $i | cut -d= -f2); i=$(echo $i | cut -d= -f1); fi
+		if [ "$i" = "-s" -o "$i" = "--ico-style"  ]   ; then optarg="ico_style"   ; fi
+		if [ "$i" = "-h" -o "$i" = "--ico-sizes"  ]   ; then optarg="ico_sizes"   ; fi
+		if [ -n "${v+x}" ]; then if [ -n "$optarg" ]  ; then eval "$optarg=\"$v\""; unset optarg; fi; unset v; fi
+	elif [ -z "$endopts" ] && [ "${i#+}" != "$i" ]; then
+		# Get short options beginning with +
+		if echo "$i" | grep -q "v"; then verbose="$i" ; fi
+		if echo "$i" | grep -q "d"; then debug="$i"   ; fi
+		if echo "$i" | grep -q "q"; then quiet="$i"   ; fi
+	else
+		# Get non-option arguments.
+		set -- "$@" "$i"
+	fi
+done
+
+main() {
+	if [ "$#" -eq 0 ]; then
+		echo "Required parameter missing"
+		exit
+	fi
+
+	[ "$debug" ] && echo "verbose=$verbose"
+	[ "$debug" ] && echo "debug=$debug"
+	[ "$debug" ] && echo "quiet=$quiet"
+	[ "$quiet" ] && unset verbose
+
+	ERR='\033[0;31m'	# Error
+	INF='\033[0;32m'	# Information
+	WRN='\033[0;33m'	# Warning
+	EMP='\033[0;36m'	# Emphasis
+	CLR='\033[0m'   	# Clear colors
+
+	Win11Icons="256 64 48 40 32 24 20 16"
+	VistaIcons="256 48 32 16"
+	WinXPIcons="48 32 16"
+	HiColor="48 32 16"
+	LoColor="48 32 16"
+	
+	case "${ico_style}" in
+		"Win11")
+			HiColor="${Win11Icons}" ;;
+		"Win7")
+			HiColor="${VistaIcons}" ;;
+		"Vista")
+			HiColor="${VistaIcons}" ;;
+		"WinXP")
+			HiColor="${WinXPIcons}" ;;
+		"Win98")
+			NoHiColor="1" ;;
+		"Win95")
+			NoHiColor="1"; LoColor="32 16" ;;
+	esac
+	if [ "${ico_sizes}" ]; then
+		ico_style="Custom"
+		HiColor="${ico_sizes}"
+	fi
+
+	[ "$verbose" ] && echo "ICO style=\"${ico_style}\""
+	[ "$verbose" ] && echo "ICO sizes=\"${HiColor}\""
+
+	for i do
+
+		filename="$(basename "${i}")"
+		pathname="$(dirname "${i}")"
+		iconame="${filename%.*}"
+
+		[ "$verbose" ] || [ "$debug" ] && echo "${INF}Processing ${iconame}...${CLR}"
+
+		if [ ! -f "${i}" ]; then
+			if [ -f "${pathname}/${iconame}.svg" ]; then
+				filename="${pathname}/${iconame}.svg"
+			elif [ -f "${pathname}/${iconame}.svgz" ]; then
+				filename="${pathname}/${iconame}.svgz"
+			elif [ ! "${filename}" = "${iconame}" ]; then
+				[ "$verbose" ] && [ "$debug" ] && echo "${WRN}Warning: ${i} not found${CLR}"
+			fi
+		fi
+
+		curdir="$(pwd)"
+		cd "${pathname}"
+
+		for h in ${HiColor}; do
+			png="${iconame}_${h}x${h}x32.png"
+			if [ -f "${png}" ]; then
+				[ "$verbose" ] || [ "$debug" ] && echo "${png} found"
+				if [ ! "$NoHiColor" ]; then
+					images="$images ${png}"
+				fi
+			else
+				if [ -f "${filename}" ]; then
+					rsvg-convert -h $h "${filename}" > "${png}"
+				fi
+				if [ -s "${png}" ]; then
+					created="$created ${png}"
+					[ "$debug" ] && echo "${png} generated"
+					if [ ! "$NoHiColor" ]; then
+						images="$images ${png}"
+					fi
+				else
+					[ "$debug" ] && echo "${WRN}Warning:${CLR} unable to generate ${png}" >&2
+					[ "$verbose" ] && echo "${png} ${EMP}not found${CLR}" >&2
+					rm -f "${png}"
+				fi
+			fi
+		done
+
+		for h in ${LoColor}; do
+			src="${iconame}_${h}x${h}x32.png"
+			png="${iconame}_${h}x${h}x8.png"
+			if [ -f "${png}" ]; then
+				[ "$verbose" ] || [ "$debug" ] && echo "${png} found"
+				if [ ! "$NoLoColor" ]; then
+					images8="$images8 ${png}"
+				fi
+			else
+				if [ -f "${src}" ]; then
+					convert "${src}" -colors 256 PNG8:"${png}"
+				fi
+				if [ -f "${png}" ]; then
+					created="$created ${png}"
+					[ "$debug" ] && echo "${png} generated"
+					if [ ! "$NoLoColor" ]; then
+						images8="$images8 ${png}"
+					fi
+				else
+					[ "$debug" ] && echo "${WRN}Warning:${CLR} unable to generate ${png}" >&2
+					[ "$verbose" ] && echo "${png} ${EMP}not found${CLR}" >&2
+				fi
+			fi
+		done
+
+		for h in ${LoColor}; do
+			src="${iconame}_${h}x${h}x8.png"
+			png="${iconame}_${h}x${h}x4.png"
+			if [ -f "${png}" ]; then
+				[ "$verbose" ] || [ "$debug" ] && echo "${png} found"
+				if [ ! "$NoLoColor" ]; then
+					images4="$images4 ${png}"
+				fi
+			else
+				if [ -f "${src}" ]; then
+					convert "${src}" -colors 16 PNG8:"${png}"
+				fi
+				if [ -f "${png}" ]; then
+					created="$created ${png}"
+					[ "$debug" ] && echo "${png} generated"
+					if [ ! "$NoLoColor" ]; then
+						images4="$images4 ${png}"
+					fi
+				else
+					[ "$debug" ] && echo "${WRN}Warning:${CLR} unable to generate ${png}" >&2
+					[ "$verbose" ] && echo "${png} ${EMP}not found${CLR}" >&2
+				fi
+			fi
+		done
+
+		images="$images4 $images8 $images"
+		output="${curdir}/${iconame}.ico"
+
+		if icotool -o "${output}" -c $images 2>/dev/null; then
+			[ "$quiet" ] || echo "Created ${iconame}.ico"
+		else
+			error="$?"
+			echo "${ERR}Error:${CLR} Failed to create ${iconame}.ico" >&2
+		fi
+
+		rm $created 2>/dev/null
+		unset created images images8 images4
+
+		cd "${curdir}"
+
+	done
+	exit ${error}
+}
+
+showhelp() {
+	echo "Usage: $exec [OPTION]... SVGFILE1 [SVGFILE2...]"
+	echo ""
+	echo "Create icons from SVG file."
+	echo ""
+	echo "  -s, --ico-style=[Win11|Win7|WinXP]"
+	echo "  -n, --ico-sizes=SIZES, e.g. 48 32 24 16"
+	echo "  -q, --quiet    don't display any output"
+	echo "  -v, --verbose  turn on verbose mode"
+	echo "      --help     display this help and exit"
+	echo "      --version  output version information and exit"
+	echo ""
+	echo "Report $exec bugs to Bamm Gabriana <fbgabriana@gmail.org>"
+}
+
+showversion() {
+	echo "$exec $ver"
+	echo "$copy"
+	echo "License GPLv2+: GPL version 2 or later."
+	echo "This is free software: you are free to change and redistribute it."
+	echo "There is NO WARRANTY, to the extent permitted by law."
+	echo ""
+	echo "Written by Bamm Gabriana."
+}
+
+[ -n "$help" ] && showhelp && exit
+[ -n "$version" ] && showversion && exit
+main "$@"
+

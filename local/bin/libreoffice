@@ -1,0 +1,6 @@
+#!/bin/sh
+
+libreoffice="/mnt/c/Program Files/LibreOffice/program/soffice.bin"
+
+"${libreoffice}" "$@"
+

@@ -1,0 +1,3 @@
+#!/bin/sh
+message=$(wslpath -w $0)
+msgbox.exe /caption="WSL App Launcher" "$message"
