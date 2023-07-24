@@ -1,0 +1,12 @@
+_HiStOrY_V2_
+SELECT\040user,host,plugin\040FROM\040mysql.user;
+DESCRIBE\040mysql.user;
+SELECT\040user,host,plugin,authentication_string\040FROM\040mysql.user;
+UPDATE\040mysql.user\040SET\040plugin\040=\040'auth_socket'\040WHERE\040user\040=\040'root';
+FLUSH\040PRIVILEGES;
+CREATE\040USER\040'fbgabriana'@'localhost';
+DROP\040USER\040'fbgabriana'@'localhost';
+exit;
+DESCRIBE\040mysql.user;
+SELECT\040user,host,plugin,authentication_string\040FROM\040mysql.user;
+exit;
