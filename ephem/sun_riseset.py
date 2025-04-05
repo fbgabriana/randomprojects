@@ -3,7 +3,8 @@
 ################################################################################
 #                                                                              #
 # Sun Rise/Set                                                                 #
-# Version 1.0                                                                  #
+# Version 1.0      
+# Jul 22  2023                                                            #
 #                                                                              #
 # Originally written by Bamm Gabriana. Feel free to use and modify.            #
 # If you have improvements, send them back to me so I can incorporate them.    #
@@ -29,8 +30,8 @@ from datetime import datetime
 #=== Edit the following values according to your requirements ===#
 
 # Enter the start and final dates to calculate, in YYYY-MM-DD format
-start_date = "2023-01-01"
-final_date = "2023-12-31"
+start_date = "2025-03-01"
+final_date = "2025-04-30"
 
 # Enter the latitude and longitude to use, in degrees including decimals
 lat =  14.60
